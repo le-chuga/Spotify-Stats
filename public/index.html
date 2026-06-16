@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Frecuencia · Tus estadísticas de escucha</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body>
+
+  <!-- Fondo de ondas decorativo (ecualizador ambiental) -->
+  <div class="eq-background" aria-hidden="true">
+    <div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div>
+    <div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div>
+    <div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div>
+    <div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div>
+    <div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div>
+    <div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div>
+    <div class="eq-bar"></div><div class="eq-bar"></div>
+  </div>
+
+  <!-- ============ PANTALLA 1: LOGIN / REGISTRO ============ -->
+  <main id="screen-auth" class="screen screen--auth" data-screen="auth">
+    <div class="auth-card">
+      <p class="eyebrow">01 — Acceso</p>
+      <h1 class="auth-title">Frecuencia</h1>
+      <p class="auth-subtitle">Inicia sesión para sintonizar tus estadísticas de escucha.</p>
+
+      <form id="form-login" class="auth-form" novalidate>
+        <div class="field">
+          <label for="login-id">Id de cuenta</label>
+          <input type="text" id="login-id" name="accountId" autocomplete="username" placeholder="tu_id_de_usuario" />
+          <p class="field-error" id="error-login-id" role="alert"></p>
+        </div>
+
+        <div class="field">
+          <label for="login-password">Contraseña</label>
+          <input type="password" id="login-password" name="password" autocomplete="current-password" placeholder="••••••••" />
+          <p class="field-error" id="error-login-password" role="alert"></p>
+        </div>
+
+        <p class="form-error" id="form-error-login" role="alert"></p>
+        <p class="form-success" id="form-success-login" role="status"></p>
+
+        <div class="auth-actions">
+          <button type="submit" class="btn btn--primary">Entrar</button>
+          <button type="button" id="btn-show-register" class="btn btn--ghost">Crear cuenta</button>
+        </div>
+      </form>
+
+      <!-- Formulario de registro, oculto hasta que se pulsa "Crear cuenta" -->
+      <form id="form-register" class="auth-form auth-form--hidden" novalidate>
+        <p class="eyebrow">Nueva cuenta</p>
+
+        <div class="field">
+          <label for="register-id">Elige un Id de cuenta</label>
+          <input type="text" id="register-id" name="accountId" autocomplete="username" placeholder="mínimo 3 caracteres" />
+          <p class="field-error" id="error-register-id" role="alert"></p>
+        </div>
+
+        <div class="field">
+          <label for="register-password">Elige una contraseña</label>
+          <input type="password" id="register-password" name="password" autocomplete="new-password" placeholder="mínimo 4 caracteres" />
+          <p class="field-error" id="error-register-password" role="alert"></p>
+        </div>
+
+        <p class="form-error" id="form-error-register" role="alert"></p>
+        <p class="form-success" id="form-success-register" role="status"></p>
+
+        <div class="auth-actions">
+          <button type="submit" class="btn btn--primary">Crear cuenta</button>
+          <button type="button" id="btn-back-to-login" class="btn btn--ghost">Volver</button>
+        </div>
+      </form>
+
+      <p class="auth-note" id="spotify-link-error" role="alert"></p>
+    </div>
+  </main>
+
+  <!-- ============ PANTALLA 2: CONECTAR SPOTIFY ============ -->
+  <main id="screen-connect" class="screen screen--connect" data-screen="connect" hidden>
+    <div class="connect-card">
+      <p class="eyebrow">02 — Sintonización</p>
+      <h2 class="connect-title">Conecta tu cuenta de música</h2>
+      <p class="connect-subtitle">
+        Vincula tu cuenta para que podamos leer tus estadísticas reales de escucha:
+        tus canciones más repetidas, artistas favoritos y lo último que has escuchado.
+      </p>
+
+      <a href="/api/spotify/login" id="btn-connect-spotify" class="btn btn--spotify">
+        <span class="spotify-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+            <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm4.586 14.424a.624.624 0 0 1-.857.207c-2.348-1.435-5.304-1.76-8.785-.964a.624.624 0 0 1-.277-1.217c3.809-.871 7.077-.496 9.712 1.115a.625.625 0 0 1 .207.86Zm1.223-2.722a.78.78 0 0 1-1.072.258c-2.687-1.652-6.785-2.131-9.965-1.166a.781.781 0 0 1-.454-1.494c3.633-1.102 8.147-.568 11.234 1.328a.78.78 0 0 1 .257 1.074Zm.105-2.835C14.692 9.027 9.375 8.85 6.297 9.79a.937.937 0 1 1-.545-1.793c3.533-1.072 9.404-.865 13.115 1.343a.938.938 0 0 1-.953 1.617Z"/>
+          </svg>
+        </span>
+        Conectar con Spotify
+      </a>
+
+      <button id="btn-skip-connect" class="btn btn--ghost">Continuar sin conectar</button>
+      <button id="btn-logout-connect" class="btn btn--text">Cerrar sesión</button>
+    </div>
+  </main>
+
+  <!-- ============ PANTALLA 3: CARGANDO ============ -->
+  <main id="screen-loading" class="screen screen--loading" data-screen="loading" hidden>
+    <div class="loading-card">
+      <div class="loading-spinner" aria-hidden="true">
+        <span></span><span></span><span></span><span></span>
+      </div>
+      <p class="loading-text">Cargando, por favor espere unos segundos…</p>
+    </div>
+  </main>
+
+  <!-- ============ PANTALLA 4: ESTADÍSTICAS ============ -->
+  <main id="screen-stats" class="screen screen--stats" data-screen="stats" hidden>
+    <header class="stats-header">
+      <div>
+        <p class="eyebrow">03 — Tu frecuencia</p>
+        <h2 class="stats-title">Estadísticas de escucha</h2>
+      </div>
+      <button id="btn-logout-stats" class="btn btn--ghost">Cerrar sesión</button>
+    </header>
+
+    <p class="stats-error" id="stats-error" role="alert" hidden></p>
+
+    <section class="profile-summary" id="profile-summary" hidden>
+      <img id="profile-avatar" class="profile-avatar" alt="" />
+      <div>
+        <p class="profile-name" id="profile-name"></p>
+        <p class="profile-meta" id="profile-meta"></p>
+      </div>
+    </section>
+
+    <section class="stats-grid">
+      <article class="stats-block">
+        <h3 class="stats-block-title">Canciones más escuchadas</h3>
+        <ol class="stats-list" id="list-top-tracks"></ol>
+      </article>
+
+      <article class="stats-block">
+        <h3 class="stats-block-title">Artistas favoritos</h3>
+        <ol class="stats-list" id="list-top-artists"></ol>
+      </article>
+
+      <article class="stats-block stats-block--wide">
+        <h3 class="stats-block-title">Reproducido recientemente</h3>
+        <ol class="stats-list" id="list-recent"></ol>
+      </article>
+    </section>
+
+    <section class="playlist-action">
+      <button id="btn-open-playlist-modal" class="btn btn--primary btn--playlist" hidden>
+        Crear playlist de…
+      </button>
+    </section>
+  </main>
+
+  <!-- ============ MODAL: SELECCIONAR ARTISTAS PARA PLAYLIST ============ -->
+  <div id="playlist-modal-overlay" class="modal-overlay" hidden>
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="playlist-modal-title">
+
+      <!-- Vista: selección de artistas + título -->
+      <div id="modal-view-select">
+        <h3 id="playlist-modal-title" class="modal-title">Crear playlist de…</h3>
+        <p class="modal-subtitle">
+          Elige uno o varios artistas. Buscaremos sus canciones en tu
+          "Canciones que te gustan" y crearemos una nueva playlist con ellas.
+        </p>
+
+        <ul class="artist-select-list" id="artist-select-list"></ul>
+
+        <div class="field" style="margin-top:20px; margin-bottom:20px;">
+          <label for="playlist-title-input">Título de la playlist</label>
+          <input type="text" id="playlist-title-input" placeholder="Mi playlist de…" />
+        </div>
+
+        <p class="modal-error" id="playlist-modal-error" role="alert"></p>
+
+        <div class="modal-actions">
+          <button id="btn-confirm-playlist" class="btn btn--primary">Crear playlist</button>
+          <button id="btn-cancel-playlist" class="btn btn--ghost">Cancelar</button>
+        </div>
+      </div>
+
+      <!-- Vista: éxito (solo visible tras crear) -->
+      <div id="modal-view-success" hidden>
+        <p class="modal-success-icon" aria-hidden="true">Playlist creada correctamente loquete</p>
+        <p class="modal-success-msg" id="playlist-modal-success"></p>
+        <div class="modal-actions" style="justify-content:center;">
+          <button id="btn-close-playlist-success" class="btn btn--primary">Salir</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script type="module" src="/js/api.js"></script>
+  <script type="module" src="/js/ui.js"></script>
+  <script type="module" src="/js/app.js"></script>
+</body>
+</html>
