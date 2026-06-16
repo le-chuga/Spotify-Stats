@@ -9,9 +9,13 @@ const SPOTIFY_API_BASE = "https://api.spotify.com/v1";
 // Desde abril 2025, Spotify ya NO permite "localhost" como redirect URI:
 // solo se permiten direcciones loopback literales (127.0.0.1).
 // Añade como Redirect URI exactamente: http://127.0.0.1:3000/api/spotify/callback
-const CLIENT_ID = process.env.SPOTIFY_CLIENT_ID || "TU_SPOTIFY_CLIENT_ID";
-const CLIENT_SECRET = process.env.SPOTIFY_CLIENT_SECRET || "TU_SPOTIFY_CLIENT_SECRET";
+const CLIENT_ID = process.env.SPOTIFY_CLIENT_ID || "ed5cee84be474c3e89d964d6ca3c43f5";
+const CLIENT_SECRET = process.env.SPOTIFY_CLIENT_SECRET || "75d1a5ed8dad438799a9a14890174b23";
 const REDIRECT_URI = process.env.SPOTIFY_REDIRECT_URI || "http://127.0.0.1:3000/api/spotify/callback";
+
+
+//
+//
 
 const SCOPES = [
   "user-top-read",
