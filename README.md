@@ -1,4 +1,4 @@
-# Frecuencia — Login + Estadísticas de Spotify (Clean Architecture)
+#Estadísticas de Spotify (Clean Architecture)
 
 Aplicación web con:
 - Base de datos SQLite (creada automáticamente al arrancar).
