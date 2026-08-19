@@ -69,4 +69,10 @@ export const api = {
   createPlaylist(artistNames, playlistTitle) {
     return postJson("/spotify/playlist", { artistNames, playlistTitle });
   },
+  getAvatar() {
+    return getJson("/avatar");
+  },
+  saveAvatar(avatarBase64) {
+    return postJson("/avatar", { avatarBase64 });
+  },
 };

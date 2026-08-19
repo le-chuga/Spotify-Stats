@@ -46,7 +46,7 @@ class SpotifyController {
     res.redirect("/?spotify_linked=1");
   };
 
-  /** GET /api/spotify/stats -> devuelve estadísticas reales del usuario */
+  //GET /api/spotify/stats -> devuelve estadísticas reales del usuario 
   stats = async (req, res) => {
     if (!req.session.accountId) {
       return res.status(401).json({ success: false, error: "Debes iniciar sesión primero" });
@@ -61,7 +61,7 @@ class SpotifyController {
     return res.json({ success: true, stats: result.stats });
   };
 
-  /** POST /api/spotify/playlist -> crea playlist a partir de artistas seleccionados */
+  // POST /api/spotify/playlist -> crea playlist a partir de artistas seleccionados 
   createPlaylist = async (req, res) => {
     if (!req.session.accountId) {
       return res.status(401).json({ success: false, error: "Debes iniciar sesión primero" });

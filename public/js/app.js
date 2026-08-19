@@ -130,20 +130,26 @@ async function doLogout() {
 async function loadStats() {
   ui.showScreen("loading");
 
-  const { ok, data } = await api.spotifyStats();
-
-  if (!ok) {
-    ui.showScreen("stats");
-    ui.showStatsError(data.error || "No se pudieron cargar las estadísticas.");
-    return;
-  }
+  // Cargar stats y avatar en paralelo
+  const [statsRes, avatarRes] = await Promise.all([
+    api.spotifyStats(),
+    api.getAvatar(),
+  ]);
 
   ui.showScreen("stats");
-  ui.renderSpotifyStats(data.stats);
 
-  // Mostrar botón "Crear playlist de..." si hay artistas disponibles
-  if (data.stats?.topArtists?.length > 0) {
-    ui.showPlaylistButton(data.stats.topArtists);
+  if (!statsRes.ok) {
+    ui.showStatsError(statsRes.data.error || "No se pudieron cargar las estadísticas.");
+  } else {
+    ui.renderSpotifyStats(statsRes.data.stats);
+    if (statsRes.data.stats?.topArtists?.length > 0) {
+      ui.showPlaylistButton(statsRes.data.stats.topArtists);
+    }
+  }
+
+  // Renderizar avatar (puede ser null si no tiene)
+  if (avatarRes.ok) {
+    ui.renderAvatar(avatarRes.data.avatarBase64);
   }
 }
 
@@ -204,6 +210,38 @@ document.getElementById("btn-confirm-playlist").addEventListener("click", async 
     btn.disabled = false;
     btn.textContent = "Crear playlist";
   }
+});
+
+/* ----------------------------------------------------------
+   7) Avatar de perfil
+   ---------------------------------------------------------- */
+
+// Click en el círculo → abre el selector de fichero
+document.getElementById("avatar-wrapper").addEventListener("click", () => {
+  document.getElementById("avatar-input").click();
+});
+
+// Cuando el usuario selecciona una imagen
+document.getElementById("avatar-input").addEventListener("change", async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  // Convertir a base64
+  const reader = new FileReader();
+  reader.onload = async (evt) => {
+    const base64 = evt.target.result; // "data:image/jpeg;base64,..."
+    ui.renderAvatar(base64); // Mostrar inmediatamente en el círculo
+
+    // Guardar en el servidor
+    const { ok, data } = await api.saveAvatar(base64);
+    if (!ok) {
+      console.error("Error guardando avatar:", data?.error);
+    }
+  };
+  reader.readAsDataURL(file);
+
+  // Limpiar input para permitir seleccionar el mismo fichero de nuevo
+  e.target.value = "";
 });
 
 init().catch((err) => {

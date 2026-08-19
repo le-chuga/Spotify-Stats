@@ -322,3 +322,32 @@ export function resetPlaylistModal() {
 export const modal = modalEls;
 export const elements = els;
 
+/* ----------------------------------------------------------
+   Avatar de perfil
+   ---------------------------------------------------------- */
+const avatarEls = {
+  wrapper: document.getElementById("avatar-wrapper"),
+  circle: document.getElementById("avatar-circle"),
+  placeholder: document.getElementById("avatar-placeholder"),
+  img: document.getElementById("avatar-img"),
+  input: document.getElementById("avatar-input"),
+};
+
+/**
+ * Muestra la imagen de avatar si existe, o el placeholder (cruz) si no.
+ * @param {string|null} avatarBase64
+ */
+export function renderAvatar(avatarBase64) {
+  if (avatarBase64) {
+    avatarEls.img.src = avatarBase64;
+    avatarEls.img.hidden = false;
+    avatarEls.placeholder.style.display = "none";
+  } else {
+    avatarEls.img.hidden = true;
+    avatarEls.placeholder.style.display = "";
+  }
+}
+
+/** Devuelve los elementos del avatar para conectar eventos en app.js */
+export const avatarElements = avatarEls;
+

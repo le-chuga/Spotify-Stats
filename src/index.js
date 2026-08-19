@@ -17,12 +17,15 @@ const LoginUserUseCase = require("./application/usecases/LoginUserUseCase");
 const LinkSpotifyAccountUseCase = require("./application/usecases/LinkSpotifyAccountUseCase");
 const GetSpotifyStatsUseCase = require("./application/usecases/GetSpotifyStatsUseCase");
 const CreatePlaylistFromArtistsUseCase = require("./application/usecases/CreatePlaylistFromArtistsUseCase");
+const AvatarUseCase = require("./application/usecases/AvatarUseCase");
 
 // --- Infraestructura: HTTP (controladores + rutas) ---
 const AuthController = require("./infrastructure/http/controllers/AuthController");
 const SpotifyController = require("./infrastructure/http/controllers/SpotifyController");
+const AvatarController = require("./infrastructure/http/controllers/AvatarController");
 const authRoutes = require("./infrastructure/http/routes/authRoutes");
 const spotifyRoutes = require("./infrastructure/http/routes/spotifyRoutes");
+const avatarRoutes = require("./infrastructure/http/routes/avatarRoutes");
 
 const PORT = process.env.PORT || 3000;
 
@@ -42,6 +45,7 @@ async function bootstrap() {
   const linkSpotifyAccountUseCase = new LinkSpotifyAccountUseCase(userRepository, spotifyClient);
   const getSpotifyStatsUseCase = new GetSpotifyStatsUseCase(userRepository, spotifyClient);
   const createPlaylistFromArtistsUseCase = new CreatePlaylistFromArtistsUseCase(userRepository, spotifyClient);
+  const avatarUseCase = new AvatarUseCase(userRepository);
 
   // 5) Construir controladores, inyectando los casos de uso
   const authController = new AuthController(registerUserUseCase, loginUserUseCase);
@@ -51,6 +55,7 @@ async function bootstrap() {
     getSpotifyStatsUseCase,
     createPlaylistFromArtistsUseCase
   );
+  const avatarController = new AvatarController(avatarUseCase);
 
   // 6) Configurar Express
   const app = express();
@@ -80,6 +85,7 @@ async function bootstrap() {
   // 7) Montar rutas
   app.use("/api/auth", authRoutes(authController));
   app.use("/api/spotify", spotifyRoutes(spotifyController));
+  app.use("/api/avatar", avatarRoutes(avatarController));
 
   // Cualquier otra ruta sirve el index.html (SPA simple)
   app.get(/^(?!\/api).*/, (req, res) => {

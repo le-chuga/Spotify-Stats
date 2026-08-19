@@ -34,9 +34,17 @@ function runMigrations(db) {
       spotify_access_token TEXT,
       spotify_refresh_token TEXT,
       spotify_expires_at INTEGER,
+      avatar_base64 TEXT,
       created_at TEXT DEFAULT (datetime('now'))
     );
   `);
+
+  // Migración: añadir columna avatar si no existe (para BDs ya creadas)
+  try {
+    db.run(`ALTER TABLE users ADD COLUMN avatar_base64 TEXT;`);
+  } catch (e) {
+    // La columna ya existe, ignorar
+  }
 
   db.run(`CREATE INDEX IF NOT EXISTS idx_users_account_id ON users(account_id);`);
 }

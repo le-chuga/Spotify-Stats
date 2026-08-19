@@ -114,9 +114,28 @@
   <!-- ============ PANTALLA 4: ESTADÍSTICAS ============ -->
   <main id="screen-stats" class="screen screen--stats" data-screen="stats" hidden>
     <header class="stats-header">
-      <div>
-        <p class="eyebrow">03 — Tu frecuencia</p>
-        <h2 class="stats-title">Estadísticas de escucha</h2>
+      <div class="stats-header-left">
+        <div class="avatar-wrapper" id="avatar-wrapper" title="Cambiar foto de perfil">
+          <div class="avatar-circle" id="avatar-circle">
+            <!-- Placeholder SVG (cruz) o imagen del usuario -->
+            <svg class="avatar-placeholder" id="avatar-placeholder" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <line x1="28" y1="16" x2="28" y2="40" stroke="#9CA3AF" stroke-width="3" stroke-linecap="round"/>
+              <line x1="16" y1="28" x2="40" y2="28" stroke="#9CA3AF" stroke-width="3" stroke-linecap="round"/>
+            </svg>
+            <img class="avatar-img" id="avatar-img" alt="Foto de perfil" hidden />
+          </div>
+          <div class="avatar-overlay" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="white" stroke-width="2">
+              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+              <circle cx="12" cy="13" r="4"/>
+            </svg>
+          </div>
+          <input type="file" id="avatar-input" accept="image/*" style="display:none" />
+        </div>
+        <div>
+          <p class="eyebrow">03 — Tu frecuencia</p>
+          <h2 class="stats-title">Estadísticas de escucha</h2>
+        </div>
       </div>
       <button id="btn-logout-stats" class="btn btn--ghost">Cerrar sesión</button>
     </header>
@@ -169,7 +188,7 @@
 
         <ul class="artist-select-list" id="artist-select-list"></ul>
 
-        <div class="field" style="margin-top:20px; margin-bottom:20px;">
+        <div class="field" style="margin-top:12px; margin-bottom:20px;">
           <label for="playlist-title-input">Título de la playlist</label>
           <input type="text" id="playlist-title-input" placeholder="Mi playlist de…" />
         </div>
@@ -184,7 +203,7 @@
 
       <!-- Vista: éxito (solo visible tras crear) -->
       <div id="modal-view-success" hidden>
-        <p class="modal-success-icon" aria-hidden="true">Playlist creada correctamente loquete</p>
+        <p class="modal-success-icon" aria-hidden="true">🎵</p>
         <p class="modal-success-msg" id="playlist-modal-success"></p>
         <div class="modal-actions" style="justify-content:center;">
           <button id="btn-close-playlist-success" class="btn btn--primary">Salir</button>

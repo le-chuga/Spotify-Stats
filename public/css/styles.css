@@ -376,9 +376,71 @@ body.screen-stats-active .screen--stats {
 .stats-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
   margin-bottom: 24px;
   gap: 16px;
+}
+
+.stats-header-left {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+/* ----------------------------------------------------------
+   Avatar de perfil
+   ---------------------------------------------------------- */
+.avatar-wrapper {
+  position: relative;
+  width: 64px;
+  height: 64px;
+  flex-shrink: 0;
+  cursor: pointer;
+  border-radius: 50%;
+}
+
+.avatar-circle {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: #2a2d33;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  transition: transform 0.2s ease, filter 0.2s ease;
+  border: 2px solid var(--line);
+}
+
+.avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+/* Overlay con icono de cámara, visible al hacer hover */
+.avatar-overlay {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s ease, background 0.2s ease;
+}
+
+/* Al hover: contenido se encoge y oscurece, overlay aparece */
+.avatar-wrapper:hover .avatar-circle {
+  transform: scale(0.88);
+  filter: brightness(0.55);
+}
+
+.avatar-wrapper:hover .avatar-overlay {
+  opacity: 1;
+  background: rgba(0, 0, 0, 0.25);
 }
 
 .stats-title {

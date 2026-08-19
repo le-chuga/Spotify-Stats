@@ -23,6 +23,7 @@ class SqliteUserRepository extends UserRepository {
     return {
       accountId: row.account_id,
       passwordHash: row.password_hash,
+      avatarBase64: row.avatar_base64 || null,
       spotifyTokens: row.spotify_access_token
         ? {
             accessToken: row.spotify_access_token,
@@ -38,6 +39,15 @@ class SqliteUserRepository extends UserRepository {
     db.run(
       "INSERT INTO users (account_id, password_hash) VALUES (:id, :pass)",
       { ":id": user.accountId, ":pass": user.passwordHash }
+    );
+    persist();
+  }
+
+  async saveAvatar(accountId, avatarBase64) {
+    const db = getDatabase();
+    db.run(
+      "UPDATE users SET avatar_base64 = :avatar WHERE account_id = :id",
+      { ":avatar": avatarBase64, ":id": accountId }
     );
     persist();
   }
