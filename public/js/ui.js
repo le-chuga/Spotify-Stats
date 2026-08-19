@@ -148,9 +148,7 @@ export function showSpotifyLinkError(message) {
 
 const statsEls = {
   error: document.getElementById("stats-error"),
-  profileSection: document.getElementById("profile-summary"),
-  avatar: document.getElementById("profile-avatar"),
-  name: document.getElementById("profile-name"),
+  displayName: document.getElementById("stats-display-name"),
   meta: document.getElementById("profile-meta"),
   topTracks: document.getElementById("list-top-tracks"),
   topArtists: document.getElementById("list-top-artists"),
@@ -208,9 +206,7 @@ export function renderSpotifyStats(stats) {
   statsEls.error.hidden = true;
 
   if (stats.profile) {
-    statsEls.profileSection.hidden = false;
-    statsEls.avatar.src = stats.profile.avatarUrl || "";
-    statsEls.name.textContent = stats.profile.displayName || "Tu perfil de Spotify";
+    statsEls.displayName.textContent = stats.profile.displayName || "Tu perfil";
     statsEls.meta.textContent = `${stats.profile.followers} seguidores`;
   }
 

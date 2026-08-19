@@ -59,7 +59,7 @@ async function bootstrap() {
 
   // 6) Configurar Express
   const app = express();
-  app.use(express.json());
+  app.use(express.json({ limit: "5mb" }));
 
   // Logger simple: muestra cada petición que llega al servidor (útil para depurar)
   app.use((req, res, next) => {
