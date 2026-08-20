@@ -72,6 +72,10 @@
       .share-grid { grid-template-columns: 1fr; }
     }
   </style>
+  <style>
+    /* Permitir scroll en la página de snapshot */
+    html, body { overflow-y: auto !important; height: auto !important; }
+  </style>
 </head>
 <body>
   <div class="eq-background" aria-hidden="true">
@@ -114,10 +118,9 @@
             ? `<img class="share-avatar" src="${avatarBase64}" alt="" />`
             : `<div class="share-avatar-placeholder"><svg viewBox="0 0 56 56" width="32" height="32" fill="none"><line x1="28" y1="16" x2="28" y2="40" stroke="#9CA3AF" stroke-width="3" stroke-linecap="round"/><line x1="16" y1="28" x2="40" y2="28" stroke="#9CA3AF" stroke-width="3" stroke-linecap="round"/></svg></div>`
           }
-          <p class="eyebrow">Frecuencia · Estadísticas de escucha</p>
           <h1 class="share-name">${stats.profile?.displayName || "Usuario"}</h1>
           <p class="share-meta">${stats.profile?.followers ?? 0} seguidores</p>
-          <p class="share-badge">Snapshot del ${date}</p>
+          <p class="share-badge">Estadísticas · ${date}</p>
         </div>
 
         <div class="share-grid">

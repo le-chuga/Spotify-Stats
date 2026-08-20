@@ -237,13 +237,26 @@ document.getElementById("avatar-input").addEventListener("change", async (e) => 
    8) Panel lateral
    ---------------------------------------------------------- */
 function openPanel(panelId, overlayId) {
-  document.getElementById(overlayId).hidden = false;
-  document.getElementById(panelId).hidden = false;
+  const overlay = document.getElementById(overlayId);
+  const panel = document.getElementById(panelId);
+  overlay.hidden = false;
+  panel.hidden = false;
+  // Forzar reflow para que la transición arranque desde translateX(100%)
+  panel.getBoundingClientRect();
+  overlay.classList.add("overlay-open");
+  panel.classList.add("panel-open");
 }
 
 function closePanel(panelId, overlayId) {
-  document.getElementById(panelId).hidden = true;
-  document.getElementById(overlayId).hidden = true;
+  const overlay = document.getElementById(overlayId);
+  const panel = document.getElementById(panelId);
+  overlay.classList.remove("overlay-open");
+  panel.classList.remove("panel-open");
+  // Esperar a que termine la animación (280ms) antes de ocultar
+  setTimeout(() => {
+    panel.hidden = true;
+    overlay.hidden = true;
+  }, 290);
 }
 
 document.getElementById("btn-menu").addEventListener("click", () => {
@@ -261,57 +274,57 @@ document.getElementById("side-panel-overlay").addEventListener("click", () => {
 /* ----------------------------------------------------------
    9) Subpanel: Compartir
    ---------------------------------------------------------- */
-document.getElementById("btn-share-panel").addEventListener("click", () => {
+/* ----------------------------------------------------------
+   9) Modal: Compartir
+   ---------------------------------------------------------- */
+async function openShareModal() {
+  // Cerrar panel lateral
   closePanel("side-panel", "side-panel-overlay");
-  // Resetear estado del subpanel
-  document.getElementById("share-generating").hidden = true;
-  document.getElementById("share-result").hidden = true;
-  document.getElementById("btn-generate-share").hidden = false;
+
+  // Mostrar modal en estado "cargando"
+  document.getElementById("share-loading-view").hidden = false;
+  document.getElementById("share-ready-view").hidden = true;
+  document.getElementById("share-error-view").hidden = true;
   document.getElementById("share-qr").innerHTML = "";
   document.getElementById("share-copy-feedback").textContent = "";
-  openPanel("share-panel", "share-panel-overlay");
-});
+  document.getElementById("share-modal-overlay").hidden = false;
 
-document.getElementById("btn-close-share").addEventListener("click", () => {
-  closePanel("share-panel", "share-panel-overlay");
-});
-
-document.getElementById("btn-back-share").addEventListener("click", () => {
-  closePanel("share-panel", "share-panel-overlay");
-  openPanel("side-panel", "side-panel-overlay");
-});
-
-document.getElementById("share-panel-overlay").addEventListener("click", () => {
-  closePanel("share-panel", "share-panel-overlay");
-});
-
-document.getElementById("btn-generate-share").addEventListener("click", async () => {
-  document.getElementById("btn-generate-share").hidden = true;
-  document.getElementById("share-generating").hidden = false;
-
+  // Generar snapshot
   const { ok, data } = await api.createShare();
 
-  document.getElementById("share-generating").hidden = true;
+  document.getElementById("share-loading-view").hidden = true;
 
   if (!ok) {
-    document.getElementById("btn-generate-share").hidden = false;
-    alert(data?.error || "No se pudo generar el enlace");
+    document.getElementById("share-error-msg").textContent = data?.error || "No se pudo generar el enlace";
+    document.getElementById("share-error-view").hidden = false;
     return;
   }
 
   const shareUrl = `${location.origin}/share/${data.id}`;
   document.getElementById("share-link-input").value = shareUrl;
-  document.getElementById("share-result").hidden = false;
 
   // Generar QR
-  document.getElementById("share-qr").innerHTML = "";
   new QRCode(document.getElementById("share-qr"), {
     text: shareUrl,
-    width: 200,
-    height: 200,
+    width: 180,
+    height: 180,
     colorDark: "#0B0D10",
     colorLight: "#ffffff",
   });
+
+  document.getElementById("share-ready-view").hidden = false;
+}
+
+document.getElementById("btn-share-panel").addEventListener("click", openShareModal);
+
+document.getElementById("btn-close-share-modal").addEventListener("click", () => {
+  document.getElementById("share-modal-overlay").hidden = true;
+});
+
+document.getElementById("share-modal-overlay").addEventListener("click", (e) => {
+  if (e.target === e.currentTarget) {
+    document.getElementById("share-modal-overlay").hidden = true;
+  }
 });
 
 document.getElementById("btn-copy-link").addEventListener("click", () => {
@@ -322,13 +335,6 @@ document.getElementById("btn-copy-link").addEventListener("click", () => {
       document.getElementById("share-copy-feedback").textContent = "";
     }, 2000);
   });
-});
-
-document.getElementById("btn-new-share").addEventListener("click", () => {
-  document.getElementById("share-result").hidden = true;
-  document.getElementById("btn-generate-share").hidden = false;
-  document.getElementById("share-qr").innerHTML = "";
-  document.getElementById("share-copy-feedback").textContent = "";
 });
 
 init().catch((err) => {

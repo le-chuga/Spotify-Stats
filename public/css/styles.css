@@ -4,7 +4,7 @@
      --bg        #0B0D10  (casi negro, base)
      --surface   #15181D  (tarjetas)
      --line      #272B31  (bordes sutiles)
-     --ink       #F4F6F2  (texto principal, blanco roto)
+     --ink   a    #F4F6F2  (texto principal, blanco roto)
      --muted     #8B939E  (texto secundario)
      --accent    #C8FF4D  (verde lima eléctrico — señal/onda)
      --accent-2  #FF5C8A  (magenta — error / contraste)
@@ -762,6 +762,14 @@ body.screen-stats-active .screen--stats {
   inset: 0;
   z-index: 40;
   background: rgba(11, 13, 16, 0.5);
+  opacity: 0;
+  transition: opacity 0.28s ease;
+  pointer-events: none;
+}
+
+.side-panel-overlay.overlay-open {
+  opacity: 1;
+  pointer-events: all;
 }
 
 .side-panel-overlay[hidden] { display: none; }
@@ -778,9 +786,21 @@ body.screen-stats-active .screen--stats {
   display: flex;
   flex-direction: column;
   box-shadow: -8px 0 32px rgba(0,0,0,0.4);
+  transform: translateX(100%);
+  transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.side-panel[hidden] { display: none; }
+.side-panel[hidden] {
+  display: flex !important;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.side-panel.panel-open {
+  transform: translateX(0);
+  visibility: visible;
+  pointer-events: all;
+}
 
 .side-panel-header {
   display: flex;
@@ -843,14 +863,8 @@ body.screen-stats-active .screen--stats {
 .side-panel-item--danger:hover { background: rgba(255,92,138,0.08); }
 
 /* ----------------------------------------------------------
-   Subpanel: compartir
+   Modal: compartir (QR + link)
    ---------------------------------------------------------- */
-.share-panel-body {
-  padding: 20px;
-  flex: 1;
-  overflow-y: auto;
-}
-
 .share-link-box {
   display: flex;
   gap: 8px;
