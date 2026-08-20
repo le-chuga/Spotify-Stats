@@ -1,5 +1,13 @@
 #Estadísticas de Spotify (Clean Architecture)
 
+He creado esta web cmo proyecto personal y etamo mejorandola poco a poco, le estoy metiend mas fncionalidades a memdida que pasa el tiempo, es posible que 
+haga un minijuego de adivinar la canción/grupo/artista o algo así pero aún no tengo muy claro como lo voy a hacer o donde implementarlo
+
+
+
+
+
+
 Aplicación web con:
 - Base de datos SQLite (creada automáticamente al arrancar).
 - Pantalla de login / registro de cuenta propia.
