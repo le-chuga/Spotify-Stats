@@ -42,7 +42,18 @@ function runMigrations(db) {
   // Migración: añadir columna avatar si no existe (para BDs ya creadas)
   try { db.run(`ALTER TABLE users ADD COLUMN avatar_base64 TEXT;`); } catch (e) {}
 
-  db.run(`CREATE INDEX IF NOT EXISTS idx_users_account_id ON users(account_id);`);
+  db.run(`
+    CREATE TABLE IF NOT EXISTS quiz_leaderboard (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      account_id TEXT NOT NULL,
+      artist_name TEXT NOT NULL,
+      time_ms INTEGER NOT NULL,
+      correct_answers INTEGER NOT NULL,
+      created_at TEXT DEFAULT (datetime('now'))
+    );
+  `);
+
+  db.run(`CREATE INDEX IF NOT EXISTS idx_leaderboard ON quiz_leaderboard(artist_name, time_ms);`);
 
   db.run(`
     CREATE TABLE IF NOT EXISTS snapshots (

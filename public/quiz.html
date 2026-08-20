@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Frecuencia · Quiz</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+  <style>
+    /* ── Reset para esta página ── */
+    html, body { overflow: hidden; height: 100%; margin: 0; }
+
+    /* ── Pantallas ── */
+    .quiz-screen { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 1; transition: opacity 0.4s ease; }
+    .quiz-screen[hidden] { display: none; }
+
+    /* ── Búsqueda ── */
+    #screen-search { background: var(--bg); overflow: hidden; }
+    .search-bg {
+      position: absolute; inset: 0; z-index: 0;
+      display: grid; grid-template-columns: repeat(5, 1fr);
+      gap: 0; overflow: hidden; opacity: 0.18;
+    }
+    .search-bg img { width: 100%; aspect-ratio: 1; object-fit: cover; filter: blur(2px); animation: bgPulse 8s ease-in-out infinite alternate; }
+    .search-bg img:nth-child(even) { animation-delay: -4s; }
+    @keyframes bgPulse { from { opacity: 0.7; } to { opacity: 1; } }
+
+    .search-content { position: relative; z-index: 1; width: 100%; max-width: 500px; padding: 24px; text-align: center; }
+    .search-title { font-size: 2rem; font-weight: 700; margin: 0 0 6px; }
+    .search-sub { color: var(--muted); font-size: 0.9rem; margin: 0 0 28px; }
+    .search-input-wrap { position: relative; }
+    .search-input-wrap input {
+      width: 100%; font-family: var(--font-display); font-size: 1rem;
+      background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+      padding: 14px 48px 14px 16px; color: var(--ink);
+      box-sizing: border-box;
+    }
+    .search-input-wrap input:focus { border-color: var(--accent); outline: none; }
+    .search-results {
+      position: absolute; top: calc(100% + 6px); left: 0; right: 0;
+      background: var(--surface); border: 1px solid var(--line);
+      border-radius: var(--radius); max-height: 280px; overflow-y: auto; z-index: 10;
+    }
+    .search-result-item {
+      display: flex; align-items: center; gap: 12px; padding: 10px 14px; cursor: pointer;
+      transition: background 0.1s;
+    }
+    .search-result-item:hover { background: var(--surface-2); }
+    .search-result-item img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
+    .search-result-item span { font-size: 0.92rem; }
+
+    .btn-back-quiz { position: absolute; top: 20px; left: 20px; z-index: 10; }
+
+    /* ── Modal de selección de artista ── */
+    #quiz-artist-modal { background: rgba(11,13,16,0.7); position: fixed; inset: 0; z-index: 20; display: flex; align-items: center; justify-content: center; }
+    #quiz-artist-modal[hidden] { display: none; }
+    .quiz-modal-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 32px; text-align: center; max-width: 360px; width: 90%; }
+    .quiz-artist-img { width: 88px; height: 88px; border-radius: 50%; object-fit: cover; margin: 0 auto 14px; display: block; border: 2px solid var(--accent); }
+    .quiz-artist-name { font-size: 1.4rem; font-weight: 700; margin: 0 0 4px; }
+    .quiz-artist-meta { color: var(--muted); font-size: 0.85rem; margin: 0 0 24px; }
+
+    /* ── Cuenta atrás ── */
+    #screen-countdown { background: #0B0D10; }
+    .countdown-number {
+      font-size: 8rem; font-weight: 700; color: var(--accent);
+      animation: countPulse 0.9s ease-in-out;
+    }
+    @keyframes countPulse { 0% { transform: scale(1.4); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+    .countdown-bg { position: absolute; inset: 0; background: radial-gradient(ellipse at center, #1a2a0a 0%, #0B0D10 70%); z-index: 0; animation: bgColor 3s ease-in-out; }
+    @keyframes bgColor { 0% { background: radial-gradient(ellipse at center, #1a0a0a 0%, #0B0D10 70%); } 50% { background: radial-gradient(ellipse at center, #0a1a0a 0%, #0B0D10 70%); } 100% { background: radial-gradient(ellipse at center, #0a0a1a 0%, #0B0D10 70%); } }
+
+    /* ── Juego ── */
+    #screen-game { background: #111318; padding: 20px; }
+    .game-timer {
+      position: absolute; top: 16px; right: 20px;
+      font-family: var(--font-mono); font-size: 0.85rem; color: var(--accent);
+      background: rgba(200,255,77,0.08); border: 1px solid rgba(200,255,77,0.2);
+      border-radius: var(--radius-sm); padding: 6px 12px;
+    }
+    .game-exit {
+      position: absolute; top: 16px; left: 20px;
+      font-family: var(--font-mono); font-size: 0.75rem; color: var(--muted);
+      border: 1px solid var(--line); background: transparent;
+      border-radius: var(--radius-sm); padding: 5px 10px; cursor: pointer;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .game-exit:hover { color: var(--accent-2); border-color: var(--accent-2); }
+    .game-progress { position: absolute; top: 52px; left: 50%; transform: translateX(-50%); font-family: var(--font-mono); font-size: 0.78rem; color: var(--muted); }
+    .game-album-img { width: 220px; height: 220px; border-radius: var(--radius); object-fit: cover; margin-bottom: 28px; box-shadow: 0 16px 48px rgba(0,0,0,0.6); }
+    .game-options { display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 420px; }
+    .game-option {
+      font-family: var(--font-display); font-size: 0.95rem; font-weight: 500;
+      background: var(--surface); border: 1px solid var(--line);
+      border-radius: var(--radius-sm); padding: 14px 18px; cursor: pointer;
+      text-align: center; transition: background 0.12s, border-color 0.12s, color 0.12s;
+    }
+    .game-option:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+    .game-option.correct { background: rgba(34,197,94,0.15); border-color: #22c55e; color: #22c55e; }
+    .game-option.wrong { background: rgba(255,92,138,0.12); border-color: var(--accent-2); color: var(--accent-2); }
+    .game-option:disabled { cursor: default; }
+
+    /* ── Leaderboard ── */
+    #screen-leaderboard { background: var(--bg); flex-direction: column; justify-content: flex-start; padding: 48px 24px; overflow-y: auto; }
+    .lb-header { text-align: center; margin-bottom: 32px; }
+    .lb-result-box { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; margin-bottom: 24px; text-align: center; max-width: 500px; width: 100%; }
+    .lb-result-time { font-size: 2rem; font-weight: 700; color: var(--accent); font-family: var(--font-mono); }
+    .lb-result-sub { color: var(--muted); font-size: 0.85rem; margin-top: 4px; }
+    .lb-table { width: 100%; max-width: 500px; border-collapse: collapse; }
+    .lb-table th { font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); }
+    .lb-table td { padding: 12px; border-bottom: 1px solid var(--line); font-size: 0.9rem; }
+    .lb-table tr:last-child td { border-bottom: none; }
+    .lb-rank-1 td { color: #fbbf24; font-weight: 700; }
+    .lb-rank-2 td { color: #94a3b8; }
+    .lb-rank-3 td { color: #cd7c2f; }
+    .lb-you { color: var(--accent) !important; }
+    .lb-time-cell { font-family: var(--font-mono); }
+  </style>
+</head>
+<body>
+
+  <!-- BOTÓN VOLVER -->
+  <button class="btn btn--ghost btn-back-quiz" id="btn-back-quiz" onclick="location.href='/'">← Volver</button>
+
+  <!-- ════════ PANTALLA 1: BÚSQUEDA ════════ -->
+  <main class="quiz-screen" id="screen-search">
+    <div class="search-bg" id="search-bg"></div>
+    <div class="search-content">
+      <p class="eyebrow">Guess the Song</p>
+      <h1 class="search-title">¿De qué artista?</h1>
+      <p class="search-sub">Busca un artista o grupo. Sonarán 10 canciones suyas, ¡adivínalas lo antes posible!</p>
+      <div class="search-input-wrap">
+        <input type="text" id="artist-search-input" placeholder="Ej: Mac Miller, Carolina Durante…" autocomplete="off" />
+        <div class="search-results" id="search-results" hidden></div>
+      </div>
+    </div>
+  </main>
+
+  <!-- MODAL: artista seleccionado → Start -->
+  <div id="quiz-artist-modal" hidden>
+    <div class="quiz-modal-card">
+      <img id="modal-artist-img" class="quiz-artist-img" alt="" />
+      <p class="quiz-artist-name" id="modal-artist-name"></p>
+      <p class="quiz-artist-meta" id="modal-artist-meta"></p>
+      <button class="btn btn--primary" id="btn-start-quiz" style="width:100%;font-size:1.05rem;padding:15px;">
+        Start
+      </button>
+    </div>
+  </div>
+
+  <!-- ════════ PANTALLA 2: CUENTA ATRÁS ════════ -->
+  <main class="quiz-screen" id="screen-countdown" hidden>
+    <div class="countdown-bg"></div>
+    <p class="countdown-number" id="countdown-number" style="position:relative;z-index:1;">3</p>
+  </main>
+
+  <!-- ════════ PANTALLA 3: JUEGO ════════ -->
+  <main class="quiz-screen" id="screen-game" hidden>
+    <div class="game-timer" id="game-timer">00:00:000</div>
+    <button class="game-exit" id="btn-exit-game">Salir</button>
+    <p class="game-progress" id="game-progress">1 / 10</p>
+    <img id="game-album-img" class="game-album-img" alt="" />
+    <div class="game-options" id="game-options"></div>
+  </main>
+
+  <!-- ════════ PANTALLA 4: LEADERBOARD ════════ -->
+  <main class="quiz-screen" id="screen-leaderboard" hidden>
+    <div class="lb-header" style="width:100%;max-width:500px;">
+      <p class="eyebrow">Resultado</p>
+      <h2 style="font-size:1.6rem;margin:0 0 20px;" id="lb-artist-title"></h2>
+      <div class="lb-result-box" id="lb-my-result">
+        <p class="lb-result-time" id="lb-my-time">—</p>
+        <p class="lb-result-sub" id="lb-my-sub"></p>
+      </div>
+      <h3 style="font-family:var(--font-mono);font-size:0.78rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--accent);margin:0 0 10px;">Top Global</h3>
+      <table class="lb-table" id="lb-table">
+        <thead><tr><th>#</th><th>Usuario</th><th>Tiempo</th></tr></thead>
+        <tbody id="lb-body"></tbody>
+      </table>
+      <button class="btn btn--ghost" id="btn-play-again" style="margin-top:24px;width:100%;">Jugar de nuevo</button>
+    </div>
+  </main>
+
+  <script>
+    // ═══════════════════════════════════════════════════════
+    //  ESTADO GLOBAL
+    // ═══════════════════════════════════════════════════════
+    let selectedArtist = null; // { name, imageUrl, itunesArtistId }
+    let quizTracks = [];        // [{trackName, albumImg, previewUrl}]
+    let currentQ = 0;
+    let timerInterval = null;
+    let startTime = 0;
+    let elapsedMs = 0;
+    let correctCount = 0;
+
+    // ═══════════════════════════════════════════════════════
+    //  FONDO DE ARTISTAS FAMOSOS
+    // ═══════════════════════════════════════════════════════
+    const BACKGROUND_ARTISTS = [
+      "Taylor Swift", "Bad Bunny", "Drake", "The Weeknd", "Billie Eilish",
+      "Kendrick Lamar", "Doja Cat", "Post Malone", "Ariana Grande", "Ed Sheeran",
+      "Harry Styles", "SZA", "Olivia Rodrigo", "Morgan Wallen", "Travis Scott",
+      "Peso Pluma", "Karol G", "Lil Durk", "21 Savage", "Metro Boomin"
+    ];
+
+    async function loadSearchBackground() {
+      const bg = document.getElementById("search-bg");
+      const artists = BACKGROUND_ARTISTS.slice(0, 15);
+      for (const name of artists) {
+        try {
+          const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(name)}&entity=musicArtist&limit=1`);
+          const data = await res.json();
+          if (data.results[0]?.artworkUrl100) {
+            const img = document.createElement("img");
+            img.src = data.results[0].artworkUrl100.replace("100x100", "400x400");
+            img.alt = "";
+            bg.appendChild(img);
+          }
+        } catch {}
+      }
+    }
+    loadSearchBackground();
+
+    // ═══════════════════════════════════════════════════════
+    //  BÚSQUEDA DE ARTISTAS (iTunes)
+    // ═══════════════════════════════════════════════════════
+    const searchInput = document.getElementById("artist-search-input");
+    const searchResults = document.getElementById("search-results");
+    let searchTimeout = null;
+
+    searchInput.addEventListener("input", () => {
+      clearTimeout(searchTimeout);
+      const q = searchInput.value.trim();
+      if (q.length < 2) { searchResults.hidden = true; return; }
+      searchTimeout = setTimeout(() => searchArtists(q), 350);
+    });
+
+    async function searchArtists(q) {
+      try {
+        const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(q)}&entity=musicArtist&limit=8`);
+        const data = await res.json();
+        renderSearchResults(data.results);
+      } catch { searchResults.hidden = true; }
+    }
+
+    function renderSearchResults(results) {
+      searchResults.innerHTML = "";
+      if (!results.length) { searchResults.hidden = true; return; }
+      results.forEach(r => {
+        const div = document.createElement("div");
+        div.className = "search-result-item";
+        const img = document.createElement("img");
+        img.src = r.artworkUrl100 || "";
+        img.alt = "";
+        const span = document.createElement("span");
+        span.textContent = r.artistName;
+        div.append(img, span);
+        div.addEventListener("click", () => selectArtist(r));
+        searchResults.appendChild(div);
+      });
+      searchResults.hidden = false;
+    }
+
+    document.addEventListener("click", (e) => {
+      if (!e.target.closest(".search-input-wrap")) searchResults.hidden = true;
+    });
+
+    async function selectArtist(artist) {
+      searchResults.hidden = true;
+      searchInput.value = artist.artistName;
+      selectedArtist = {
+        name: artist.artistName,
+        imageUrl: artist.artworkUrl100?.replace("100x100", "300x300") || "",
+        itunesArtistId: artist.artistId,
+      };
+      document.getElementById("modal-artist-img").src = selectedArtist.imageUrl;
+      document.getElementById("modal-artist-name").textContent = selectedArtist.name;
+      document.getElementById("modal-artist-meta").textContent = "Guess the Song";
+      document.getElementById("quiz-artist-modal").hidden = false;
+    }
+
+    // ═══════════════════════════════════════════════════════
+    //  START → cargar canciones → cuenta atrás → juego
+    // ═══════════════════════════════════════════════════════
+    document.getElementById("btn-start-quiz").addEventListener("click", async () => {
+      document.getElementById("quiz-artist-modal").hidden = true;
+      // Cargar canciones del artista con previews
+      const tracks = await fetchArtistTracks(selectedArtist.itunesArtistId);
+      if (tracks.length < 4) {
+        alert("No se encontraron suficientes canciones con preview para este artista. Prueba con otro.");
+        document.getElementById("quiz-artist-modal").hidden = false;
+        return;
+      }
+      quizTracks = shuffle(tracks).slice(0, 10);
+      currentQ = 0; correctCount = 0;
+      showScreen("countdown");
+      startCountdown();
+    });
+
+    async function fetchArtistTracks(artistId) {
+      const res = await fetch(`https://itunes.apple.com/lookup?id=${artistId}&entity=song&limit=50`);
+      const data = await res.json();
+      return data.results
+        .filter(r => r.wrapperType === "track" && r.previewUrl)
+        .map(r => ({
+          trackName: r.trackName,
+          albumImg: r.artworkUrl100?.replace("100x100", "400x400") || "",
+          previewUrl: r.previewUrl,
+        }));
+    }
+
+    function startCountdown() {
+      const el = document.getElementById("countdown-number");
+      let n = 3;
+      el.textContent = n;
+      const iv = setInterval(() => {
+        n--;
+        if (n > 0) {
+          el.textContent = n;
+          // Reiniciar animación
+          el.style.animation = "none";
+          el.getBoundingClientRect();
+          el.style.animation = "countPulse 0.9s ease-in-out";
+        } else {
+          clearInterval(iv);
+          el.textContent = "GO!";
+          setTimeout(() => {
+            showScreen("game");
+            startTime = Date.now();
+            startTimer();
+            showQuestion(0);
+          }, 600);
+        }
+      }, 1000);
+    }
+
+    // ═══════════════════════════════════════════════════════
+    //  TIMER
+    // ═══════════════════════════════════════════════════════
+    function startTimer() {
+      timerInterval = setInterval(() => {
+        elapsedMs = Date.now() - startTime;
+        document.getElementById("game-timer").textContent = formatTime(elapsedMs);
+      }, 17);
+    }
+
+    function stopTimer() { clearInterval(timerInterval); }
+
+    function formatTime(ms) {
+      const mins = Math.floor(ms / 60000).toString().padStart(2, "0");
+      const secs = Math.floor((ms % 60000) / 1000).toString().padStart(2, "0");
+      const millis = Math.floor(ms % 1000).toString().padStart(3, "0");
+      return `${mins}:${secs}:${millis}`;
+    }
+
+    // ═══════════════════════════════════════════════════════
+    //  PREGUNTA
+    // ═══════════════════════════════════════════════════════
+    let currentAudio = null;
+
+    function showQuestion(index) {
+      if (index >= quizTracks.length) { endQuiz(); return; }
+
+      document.getElementById("game-progress").textContent = `${index + 1} / 10`;
+      const track = quizTracks[index];
+
+      // Imagen del álbum
+      document.getElementById("game-album-img").src = track.albumImg;
+
+      // Audio
+      if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+      currentAudio = new Audio(track.previewUrl);
+      currentAudio.volume = 0.8;
+      currentAudio.play().catch(() => {});
+
+      // Opciones: la correcta + 3 falsas del pool restante
+      const wrongPool = quizTracks.filter((_, i) => i !== index);
+      const wrongs = shuffle(wrongPool).slice(0, 3).map(t => t.trackName);
+      const options = shuffle([track.trackName, ...wrongs]);
+
+      const container = document.getElementById("game-options");
+      container.innerHTML = "";
+      options.forEach(opt => {
+        const btn = document.createElement("button");
+        btn.className = "game-option";
+        btn.textContent = opt;
+        btn.addEventListener("click", () => handleAnswer(btn, opt, track.trackName, options, container));
+        container.appendChild(btn);
+      });
+    }
+
+    function handleAnswer(clickedBtn, chosen, correct, allOptions, container) {
+      // Deshabilitar todos
+      container.querySelectorAll(".game-option").forEach(b => b.disabled = true);
+
+      const isCorrect = chosen === correct;
+      if (isCorrect) correctCount++;
+
+      // Colorear
+      container.querySelectorAll(".game-option").forEach(b => {
+        if (b.textContent === correct) b.classList.add("correct");
+        else if (b === clickedBtn && !isCorrect) b.classList.add("wrong");
+      });
+
+      // Mostrar botón salir si falla
+      if (!isCorrect) document.getElementById("btn-exit-game").style.opacity = "1";
+
+      // Siguiente pregunta tras 3 segundos
+      setTimeout(() => {
+        currentQ++;
+        if (currentQ >= 10) {
+          endQuiz();
+        } else {
+          showQuestion(currentQ);
+        }
+      }, 3000);
+    }
+
+    // ═══════════════════════════════════════════════════════
+    //  SALIR DURANTE EL JUEGO
+    // ═══════════════════════════════════════════════════════
+    document.getElementById("btn-exit-game").addEventListener("click", () => {
+      stopTimer();
+      if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+      showScreen("search");
+    });
+
+    // ═══════════════════════════════════════════════════════
+    //  FIN DEL QUIZ
+    // ═══════════════════════════════════════════════════════
+    async function endQuiz() {
+      stopTimer();
+      if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+
+      // Guardar resultado en el servidor
+      try {
+        await fetch("/api/quiz/result", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            artistName: selectedArtist.name,
+            timeMs: elapsedMs,
+            correctAnswers: correctCount,
+          }),
+        });
+      } catch {}
+
+      // Cargar leaderboard
+      const lb = await fetch(`/api/quiz/leaderboard?artist=${encodeURIComponent(selectedArtist.name)}`);
+      const lbData = await lb.json();
+
+      showLeaderboard(lbData.leaderboard || []);
+    }
+
+    function showLeaderboard(leaderboard) {
+      document.getElementById("lb-artist-title").textContent = selectedArtist.name;
+      document.getElementById("lb-my-time").textContent = formatTime(elapsedMs);
+      document.getElementById("lb-my-sub").textContent =
+        correctCount === 10
+          ? `¡10/10 correctas!`
+          : `${correctCount}/10 correctas — resultado no entra en el top (necesitas 10/10)`;
+
+      const tbody = document.getElementById("lb-body");
+      tbody.innerHTML = "";
+
+      if (!leaderboard.length) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td colspan="3" style="color:var(--muted);text-align:center;padding:20px;">Sé el primero en el leaderboard con 10/10</td>`;
+        tbody.appendChild(tr);
+      } else {
+        leaderboard.forEach((row, i) => {
+          const tr = document.createElement("tr");
+          if (i === 0) tr.className = "lb-rank-1";
+          else if (i === 1) tr.className = "lb-rank-2";
+          else if (i === 2) tr.className = "lb-rank-3";
+          const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `${i + 1}`;
+          tr.innerHTML = `
+            <td>${medal}</td>
+            <td>${row.account_id}</td>
+            <td class="lb-time-cell">${formatTime(row.best_time)}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      }
+
+      showScreen("leaderboard");
+    }
+
+    document.getElementById("btn-play-again").addEventListener("click", () => {
+      showScreen("search");
+    });
+
+    // ═══════════════════════════════════════════════════════
+    //  UTILIDADES
+    // ═══════════════════════════════════════════════════════
+    function showScreen(name) {
+      document.querySelectorAll(".quiz-screen").forEach(s => s.hidden = true);
+      document.getElementById("screen-" + name).hidden = false;
+    }
+
+    function shuffle(arr) {
+      const a = [...arr];
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+  </script>
+</body>
+</html>

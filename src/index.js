@@ -25,6 +25,7 @@ const AuthController = require("./infrastructure/http/controllers/AuthController
 const SpotifyController = require("./infrastructure/http/controllers/SpotifyController");
 const AvatarController = require("./infrastructure/http/controllers/AvatarController");
 const SnapshotController = require("./infrastructure/http/controllers/SnapshotController");
+const QuizController = require("./infrastructure/http/controllers/QuizController");
 const authRoutes = require("./infrastructure/http/routes/authRoutes");
 const spotifyRoutes = require("./infrastructure/http/routes/spotifyRoutes");
 const avatarRoutes = require("./infrastructure/http/routes/avatarRoutes");
@@ -62,6 +63,7 @@ async function bootstrap() {
   );
   const avatarController = new AvatarController(avatarUseCase);
   const snapshotController = new SnapshotController(snapshotUseCase);
+  const quizController = new QuizController();
 
   // 6) Configurar Express
   const app = express();
@@ -93,10 +95,20 @@ async function bootstrap() {
   app.use("/api/spotify", spotifyRoutes(spotifyController));
   app.use("/api/avatar", avatarRoutes(avatarController));
   app.use("/api/share", snapshotRoutes(snapshotController));
+  app.use("/api/quiz/result", (req, res, next) => {
+    if (req.method === "POST") return quizController.saveResult(req, res);
+    next();
+  });
+  app.use("/api/quiz/leaderboard", (req, res) => quizController.getLeaderboard(req, res));
 
   // Ruta pública para ver una snapshot compartida
   app.get("/share/:id", (req, res) => {
     res.sendFile(path.join(__dirname, "..", "public", "share.html"));
+  });
+
+  // Ruta del quiz
+  app.get("/quiz", (req, res) => {
+    res.sendFile(path.join(__dirname, "..", "public", "quiz.html"));
   });
 
   // Cualquier otra ruta sirve el index.html (SPA simple)
