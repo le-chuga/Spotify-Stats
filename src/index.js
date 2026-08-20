@@ -18,14 +18,20 @@ const LinkSpotifyAccountUseCase = require("./application/usecases/LinkSpotifyAcc
 const GetSpotifyStatsUseCase = require("./application/usecases/GetSpotifyStatsUseCase");
 const CreatePlaylistFromArtistsUseCase = require("./application/usecases/CreatePlaylistFromArtistsUseCase");
 const AvatarUseCase = require("./application/usecases/AvatarUseCase");
+const SnapshotUseCase = require("./application/usecases/SnapshotUseCase");
 
 // --- Infraestructura: HTTP (controladores + rutas) ---
 const AuthController = require("./infrastructure/http/controllers/AuthController");
 const SpotifyController = require("./infrastructure/http/controllers/SpotifyController");
 const AvatarController = require("./infrastructure/http/controllers/AvatarController");
+const SnapshotController = require("./infrastructure/http/controllers/SnapshotController");
 const authRoutes = require("./infrastructure/http/routes/authRoutes");
 const spotifyRoutes = require("./infrastructure/http/routes/spotifyRoutes");
 const avatarRoutes = require("./infrastructure/http/routes/avatarRoutes");
+const snapshotRoutes = require("./infrastructure/http/routes/snapshotRoutes");
+
+// --- Infraestructura: Repositorios adicionales ---
+const SqliteSnapshotRepository = require("./infrastructure/repositories/SqliteSnapshotRepository");
 
 const PORT = process.env.PORT || 3000;
 
@@ -46,16 +52,16 @@ async function bootstrap() {
   const getSpotifyStatsUseCase = new GetSpotifyStatsUseCase(userRepository, spotifyClient);
   const createPlaylistFromArtistsUseCase = new CreatePlaylistFromArtistsUseCase(userRepository, spotifyClient);
   const avatarUseCase = new AvatarUseCase(userRepository);
+  const snapshotRepository = new SqliteSnapshotRepository();
+  const snapshotUseCase = new SnapshotUseCase(snapshotRepository, userRepository, spotifyClient);
 
-  // 5) Construir controladores, inyectando los casos de uso
+  // 5) Construir controladores
   const authController = new AuthController(registerUserUseCase, loginUserUseCase);
   const spotifyController = new SpotifyController(
-    spotifyClient,
-    linkSpotifyAccountUseCase,
-    getSpotifyStatsUseCase,
-    createPlaylistFromArtistsUseCase
+    spotifyClient, linkSpotifyAccountUseCase, getSpotifyStatsUseCase, createPlaylistFromArtistsUseCase
   );
   const avatarController = new AvatarController(avatarUseCase);
+  const snapshotController = new SnapshotController(snapshotUseCase);
 
   // 6) Configurar Express
   const app = express();
@@ -86,6 +92,12 @@ async function bootstrap() {
   app.use("/api/auth", authRoutes(authController));
   app.use("/api/spotify", spotifyRoutes(spotifyController));
   app.use("/api/avatar", avatarRoutes(avatarController));
+  app.use("/api/share", snapshotRoutes(snapshotController));
+
+  // Ruta pública para ver una snapshot compartida
+  app.get("/share/:id", (req, res) => {
+    res.sendFile(path.join(__dirname, "..", "public", "share.html"));
+  });
 
   // Cualquier otra ruta sirve el index.html (SPA simple)
   app.get(/^(?!\/api).*/, (req, res) => {

@@ -75,4 +75,7 @@ export const api = {
   saveAvatar(avatarBase64) {
     return postJson("/avatar", { avatarBase64 });
   },
+  createShare() {
+    return postJson("/share", {});
+  },
 };

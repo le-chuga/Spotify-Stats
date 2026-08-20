@@ -458,37 +458,11 @@ body.screen-stats-active .screen--stats {
   margin-bottom: 20px;
 }
 
-.profile-summary {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  padding: 18px;
-  margin-bottom: 24px;
-}
-
-.profile-avatar {
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  object-fit: cover;
-  background: var(--surface-2);
-  border: 1px solid var(--line);
-}
-
-.profile-name {
-  font-weight: 700;
-  font-size: 1.1rem;
-  margin: 0 0 4px;
-}
-
 .profile-meta {
   font-family: var(--font-mono);
   font-size: 0.8rem;
   color: var(--muted);
-  margin: 0;
+  margin: 2px 0 0;
 }
 
 .stats-grid {
@@ -745,4 +719,165 @@ body.screen-stats-active .screen--stats {
   .stats-grid { grid-template-columns: 1fr; }
   .auth-card, .connect-card, .loading-card { padding: 26px; }
   .auth-title { font-size: 2rem; }
+}
+
+/* ----------------------------------------------------------
+   Botón hamburguesa
+   ---------------------------------------------------------- */
+.btn-hamburger {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  width: 40px;
+  height: 40px;
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  padding: 0;
+  transition: border-color 0.15s ease;
+  flex-shrink: 0;
+}
+
+.btn-hamburger:hover { border-color: var(--accent); }
+
+.btn-hamburger span {
+  display: block;
+  width: 18px;
+  height: 2px;
+  background: var(--ink);
+  border-radius: 2px;
+  transition: background 0.15s ease;
+}
+
+.btn-hamburger:hover span { background: var(--accent); }
+
+/* ----------------------------------------------------------
+   Panel lateral
+   ---------------------------------------------------------- */
+.side-panel-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: rgba(11, 13, 16, 0.5);
+}
+
+.side-panel-overlay[hidden] { display: none; }
+
+.side-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 100vh;
+  width: 280px;
+  z-index: 41;
+  background: var(--surface);
+  border-left: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  box-shadow: -8px 0 32px rgba(0,0,0,0.4);
+}
+
+.side-panel[hidden] { display: none; }
+
+.side-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 20px 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+.btn-panel-close {
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  transition: color 0.15s;
+}
+.btn-panel-close:hover { color: var(--ink); }
+
+.btn-panel-back {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  font-size: 0.88rem;
+  font-family: var(--font-display);
+  cursor: pointer;
+  padding: 4px 0;
+  transition: color 0.15s;
+}
+.btn-panel-back:hover { color: var(--ink); }
+
+.side-panel-nav {
+  display: flex;
+  flex-direction: column;
+  padding: 12px 0;
+}
+
+.side-panel-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: transparent;
+  border: none;
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 500;
+  padding: 14px 20px;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.12s ease;
+}
+.side-panel-item:hover { background: var(--surface-2); }
+.side-panel-item--danger { color: var(--accent-2); }
+.side-panel-item--danger:hover { background: rgba(255,92,138,0.08); }
+
+/* ----------------------------------------------------------
+   Subpanel: compartir
+   ---------------------------------------------------------- */
+.share-panel-body {
+  padding: 20px;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.share-link-box {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.share-link-box input {
+  flex: 1;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  color: var(--ink);
+  min-width: 0;
+}
+
+.share-qr-box {
+  display: flex;
+  justify-content: center;
+  padding: 16px;
+  background: white;
+  border-radius: var(--radius-sm);
+}
+
+.share-qr-box canvas,
+.share-qr-box img {
+  border-radius: 4px;
 }

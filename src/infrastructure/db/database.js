@@ -40,13 +40,19 @@ function runMigrations(db) {
   `);
 
   // Migración: añadir columna avatar si no existe (para BDs ya creadas)
-  try {
-    db.run(`ALTER TABLE users ADD COLUMN avatar_base64 TEXT;`);
-  } catch (e) {
-    // La columna ya existe, ignorar
-  }
+  try { db.run(`ALTER TABLE users ADD COLUMN avatar_base64 TEXT;`); } catch (e) {}
 
   db.run(`CREATE INDEX IF NOT EXISTS idx_users_account_id ON users(account_id);`);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS snapshots (
+      id TEXT PRIMARY KEY,
+      account_id TEXT NOT NULL,
+      stats_json TEXT NOT NULL,
+      avatar_base64 TEXT,
+      created_at TEXT DEFAULT (datetime('now'))
+    );
+  `);
 }
 
 /**

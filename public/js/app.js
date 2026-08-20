@@ -215,33 +215,120 @@ document.getElementById("btn-confirm-playlist").addEventListener("click", async 
 /* ----------------------------------------------------------
    7) Avatar de perfil
    ---------------------------------------------------------- */
-
-// Click en el círculo → abre el selector de fichero
 document.getElementById("avatar-wrapper").addEventListener("click", () => {
   document.getElementById("avatar-input").click();
 });
 
-// Cuando el usuario selecciona una imagen
 document.getElementById("avatar-input").addEventListener("change", async (e) => {
   const file = e.target.files[0];
   if (!file) return;
-
-  // Convertir a base64
   const reader = new FileReader();
   reader.onload = async (evt) => {
-    const base64 = evt.target.result; // "data:image/jpeg;base64,..."
-    ui.renderAvatar(base64); // Mostrar inmediatamente en el círculo
-
-    // Guardar en el servidor
+    const base64 = evt.target.result;
+    ui.renderAvatar(base64);
     const { ok, data } = await api.saveAvatar(base64);
-    if (!ok) {
-      console.error("Error guardando avatar:", data?.error);
-    }
+    if (!ok) console.error("Error guardando avatar:", data?.error);
   };
   reader.readAsDataURL(file);
-
-  // Limpiar input para permitir seleccionar el mismo fichero de nuevo
   e.target.value = "";
+});
+
+/* ----------------------------------------------------------
+   8) Panel lateral
+   ---------------------------------------------------------- */
+function openPanel(panelId, overlayId) {
+  document.getElementById(overlayId).hidden = false;
+  document.getElementById(panelId).hidden = false;
+}
+
+function closePanel(panelId, overlayId) {
+  document.getElementById(panelId).hidden = true;
+  document.getElementById(overlayId).hidden = true;
+}
+
+document.getElementById("btn-menu").addEventListener("click", () => {
+  openPanel("side-panel", "side-panel-overlay");
+});
+
+document.getElementById("btn-close-panel").addEventListener("click", () => {
+  closePanel("side-panel", "side-panel-overlay");
+});
+
+document.getElementById("side-panel-overlay").addEventListener("click", () => {
+  closePanel("side-panel", "side-panel-overlay");
+});
+
+/* ----------------------------------------------------------
+   9) Subpanel: Compartir
+   ---------------------------------------------------------- */
+document.getElementById("btn-share-panel").addEventListener("click", () => {
+  closePanel("side-panel", "side-panel-overlay");
+  // Resetear estado del subpanel
+  document.getElementById("share-generating").hidden = true;
+  document.getElementById("share-result").hidden = true;
+  document.getElementById("btn-generate-share").hidden = false;
+  document.getElementById("share-qr").innerHTML = "";
+  document.getElementById("share-copy-feedback").textContent = "";
+  openPanel("share-panel", "share-panel-overlay");
+});
+
+document.getElementById("btn-close-share").addEventListener("click", () => {
+  closePanel("share-panel", "share-panel-overlay");
+});
+
+document.getElementById("btn-back-share").addEventListener("click", () => {
+  closePanel("share-panel", "share-panel-overlay");
+  openPanel("side-panel", "side-panel-overlay");
+});
+
+document.getElementById("share-panel-overlay").addEventListener("click", () => {
+  closePanel("share-panel", "share-panel-overlay");
+});
+
+document.getElementById("btn-generate-share").addEventListener("click", async () => {
+  document.getElementById("btn-generate-share").hidden = true;
+  document.getElementById("share-generating").hidden = false;
+
+  const { ok, data } = await api.createShare();
+
+  document.getElementById("share-generating").hidden = true;
+
+  if (!ok) {
+    document.getElementById("btn-generate-share").hidden = false;
+    alert(data?.error || "No se pudo generar el enlace");
+    return;
+  }
+
+  const shareUrl = `${location.origin}/share/${data.id}`;
+  document.getElementById("share-link-input").value = shareUrl;
+  document.getElementById("share-result").hidden = false;
+
+  // Generar QR
+  document.getElementById("share-qr").innerHTML = "";
+  new QRCode(document.getElementById("share-qr"), {
+    text: shareUrl,
+    width: 200,
+    height: 200,
+    colorDark: "#0B0D10",
+    colorLight: "#ffffff",
+  });
+});
+
+document.getElementById("btn-copy-link").addEventListener("click", () => {
+  const input = document.getElementById("share-link-input");
+  navigator.clipboard.writeText(input.value).then(() => {
+    document.getElementById("share-copy-feedback").textContent = "¡Enlace copiado!";
+    setTimeout(() => {
+      document.getElementById("share-copy-feedback").textContent = "";
+    }, 2000);
+  });
+});
+
+document.getElementById("btn-new-share").addEventListener("click", () => {
+  document.getElementById("share-result").hidden = true;
+  document.getElementById("btn-generate-share").hidden = false;
+  document.getElementById("share-qr").innerHTML = "";
+  document.getElementById("share-copy-feedback").textContent = "";
 });
 
 init().catch((err) => {
