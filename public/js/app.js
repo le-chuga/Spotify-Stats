@@ -320,6 +320,7 @@ document.getElementById("btn-quizzes-panel").addEventListener("click", () => {
   setTimeout(() => { location.href = "/quiz"; }, 300);
 });
 
+
 document.getElementById("btn-share-panel").addEventListener("click", openShareModal);
 
 document.getElementById("btn-close-share-modal").addEventListener("click", () => {

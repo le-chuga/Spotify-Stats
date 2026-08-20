@@ -155,7 +155,7 @@
   <!-- ════════ PANTALLA 3: JUEGO ════════ -->
   <main class="quiz-screen" id="screen-game" hidden>
     <div class="game-timer" id="game-timer">00:00:000</div>
-    <button class="game-exit" id="btn-exit-game">Salir</button>
+    
     <p class="game-progress" id="game-progress">1 / 10</p>
     <img id="game-album-img" class="game-album-img" alt="" />
     <div class="game-options" id="game-options"></div>
@@ -401,7 +401,7 @@
       });
 
       // Mostrar botón salir si falla
-      if (!isCorrect) document.getElementById("btn-exit-game").style.opacity = "1";
+     
 
       // Siguiente pregunta tras 3 segundos
       setTimeout(() => {
@@ -411,17 +411,8 @@
         } else {
           showQuestion(currentQ);
         }
-      }, 3000);
+      }, 800);
     }
-
-    // ═══════════════════════════════════════════════════════
-    //  SALIR DURANTE EL JUEGO
-    // ═══════════════════════════════════════════════════════
-    document.getElementById("btn-exit-game").addEventListener("click", () => {
-      stopTimer();
-      if (currentAudio) { currentAudio.pause(); currentAudio = null; }
-      showScreen("search");
-    });
 
     // ═══════════════════════════════════════════════════════
     //  FIN DEL QUIZ
@@ -463,7 +454,7 @@
 
       if (!leaderboard.length) {
         const tr = document.createElement("tr");
-        tr.innerHTML = `<td colspan="3" style="color:var(--muted);text-align:center;padding:20px;">Sé el primero en el leaderboard con 10/10</td>`;
+        tr.innerHTML = `<td colspan="3" style="color:var(--muted);text-align:center;padding:20px;">Sé el primero en el ranking con 10/10</td>`;
         tbody.appendChild(tr);
       } else {
         leaderboard.forEach((row, i) => {
