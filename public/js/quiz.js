@@ -7,8 +7,8 @@
 // ═══════════════════════════════════════════════════════
 //  ESTADO GLOBAL
 // ═══════════════════════════════════════════════════════
-let selectedArtist = null; // { name, imageUrl, itunesArtistId }
-let quizTracks = [];       // [{ trackName, albumImg, previewUrl }]
+let selectedArtist = null;
+let quizTracks = [];
 let currentQ = 0;
 let timerInterval = null;
 let startTime = 0;
@@ -149,7 +149,7 @@ function startCountdown() {
     if (n > 0) {
       el.textContent = n;
       el.style.animation = "none";
-      el.getBoundingClientRect(); // forzar reflow para reiniciar animación
+      el.getBoundingClientRect();
       el.style.animation = "countPulse 0.9s ease-in-out";
     } else {
       clearInterval(iv);
@@ -191,9 +191,6 @@ function formatTime(ms) {
 function showQuestion(index) {
   if (index >= quizTracks.length) { endQuiz(); return; }
 
-  // Al inicio del quiz el botón salir está oculto (solo aparece al fallar)
-
-
   document.getElementById("game-progress").textContent = `${index + 1} / 10`;
   const track = quizTracks[index];
 
@@ -222,31 +219,25 @@ function showQuestion(index) {
 }
 
 function handleAnswer(clickedBtn, chosen, correct, container) {
+  // Deshabilitar todos los botones inmediatamente
   container.querySelectorAll(".game-option").forEach((b) => (b.disabled = true));
 
   const isCorrect = chosen === correct;
   if (isCorrect) correctCount++;
 
+  // Colorear: correcta en verde, la pulsada en rojo si era incorrecta
   container.querySelectorAll(".game-option").forEach((b) => {
     if (b.textContent === correct) b.classList.add("correct");
     else if (b === clickedBtn && !isCorrect) b.classList.add("wrong");
   });
 
-  if (!isCorrect) {
-    document.getElementById("btn-exit-game").classList.add("visible");
-  }
-
+  // Tanto si acierta como si falla, continúa a la siguiente pregunta tras 3 segundos
   setTimeout(() => {
     currentQ++;
     if (currentQ >= 10) endQuiz();
     else showQuestion(currentQ);
   }, 800);
 }
-
-// ═══════════════════════════════════════════════════════
-//  SALIR DURANTE EL JUEGO
-// ═══════════════════════════════════════════════════════
-
 
 // ═══════════════════════════════════════════════════════
 //  FIN DEL QUIZ

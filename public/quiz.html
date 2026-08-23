@@ -76,21 +76,7 @@
       background: rgba(200,255,77,0.08); border: 1px solid rgba(200,255,77,0.2);
       border-radius: var(--radius-sm); padding: 6px 12px;
     }
-    .game-exit {
-      position: absolute; top: 16px; left: 20px;
-      font-family: var(--font-mono); font-size: 0.75rem; color: var(--muted);
-      border: 1px solid var(--line); background: transparent;
-      border-radius: var(--radius-sm); padding: 5px 10px; cursor: pointer;
-      transition: color 0.15s, border-color 0.15s, opacity 0.3s ease;
-      opacity: 0;
-      pointer-events: none;
-    }
-    .game-exit.visible {
-      opacity: 1;
-      pointer-events: all;
-    }
-    .game-exit:hover { color: var(--accent-2); border-color: var(--accent-2); }
-    .game-progress { position: absolute; top: 52px; left: 50%; transform: translateX(-50%); font-family: var(--font-mono); font-size: 0.78rem; color: var(--muted); }
+    .game-progress { position: absolute; top: 16px; left: 50%; transform: translateX(-50%); font-family: var(--font-mono); font-size: 0.78rem; color: var(--muted); }
     .game-album-img { width: 220px; height: 220px; border-radius: var(--radius); object-fit: cover; margin-bottom: 28px; box-shadow: 0 16px 48px rgba(0,0,0,0.6); }
     .game-options { display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 420px; }
     .game-option {
@@ -161,7 +147,6 @@
   <!-- ════════ PANTALLA 3: JUEGO ════════ -->
   <main class="quiz-screen" id="screen-game" hidden>
     <div class="game-timer" id="game-timer">00:00:000</div>
-    <button class="game-exit" id="btn-exit-game">Salir</button>
     <p class="game-progress" id="game-progress">1 / 10</p>
     <img id="game-album-img" class="game-album-img" alt="" />
     <div class="game-options" id="game-options"></div>
