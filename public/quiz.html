@@ -81,7 +81,13 @@
       font-family: var(--font-mono); font-size: 0.75rem; color: var(--muted);
       border: 1px solid var(--line); background: transparent;
       border-radius: var(--radius-sm); padding: 5px 10px; cursor: pointer;
-      transition: color 0.15s, border-color 0.15s;
+      transition: color 0.15s, border-color 0.15s, opacity 0.3s ease;
+      opacity: 0;
+      pointer-events: none;
+    }
+    .game-exit.visible {
+      opacity: 1;
+      pointer-events: all;
     }
     .game-exit:hover { color: var(--accent-2); border-color: var(--accent-2); }
     .game-progress { position: absolute; top: 52px; left: 50%; transform: translateX(-50%); font-family: var(--font-mono); font-size: 0.78rem; color: var(--muted); }
@@ -126,7 +132,7 @@
     <div class="search-content">
       <p class="eyebrow">Guess the Song</p>
       <h1 class="search-title">¿De qué artista?</h1>
-      <p class="search-sub">Busca un artista o grupo. Sonarán 10 canciones suyas, Tendrás que adivinarlas lo antes posible!</p>
+      <p class="search-sub">Busca un artista o grupo. Sonarán 10 canciones suyas, ¡adivínalas lo antes posible!</p>
       <div class="search-input-wrap">
         <input type="text" id="artist-search-input" placeholder="Ej: Mac Miller, Carolina Durante…" autocomplete="off" />
         <div class="search-results" id="search-results" hidden></div>
@@ -155,6 +161,7 @@
   <!-- ════════ PANTALLA 3: JUEGO ════════ -->
   <main class="quiz-screen" id="screen-game" hidden>
     <div class="game-timer" id="game-timer">00:00:000</div>
+    <button class="game-exit" id="btn-exit-game">Salir</button>
     <p class="game-progress" id="game-progress">1 / 10</p>
     <img id="game-album-img" class="game-album-img" alt="" />
     <div class="game-options" id="game-options"></div>

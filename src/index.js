@@ -101,7 +101,23 @@ async function bootstrap() {
   });
   app.use("/api/quiz/leaderboard", (req, res) => quizController.getLeaderboard(req, res));
 
-  // Ruta pública para ver una snapshot compartida
+  const os = require("os");
+
+  function getLocalIP() {
+    const interfaces = os.networkInterfaces();
+    for (const name of Object.keys(interfaces)) {
+      for (const iface of interfaces[name]) {
+        if (iface.family === "IPv4" && !iface.internal) {
+          return iface.address;
+        }
+      }
+    }
+    return "127.0.0.1";
+  }
+
+  app.get("/api/server-info", (req, res) => {
+    res.json({ ip: getLocalIP(), port: PORT });
+  });
   app.get("/share/:id", (req, res) => {
     res.sendFile(path.join(__dirname, "..", "public", "share.html"));
   });

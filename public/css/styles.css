@@ -4,7 +4,7 @@
      --bg        #0B0D10  (casi negro, base)
      --surface   #15181D  (tarjetas)
      --line      #272B31  (bordes sutiles)
-     --ink   a    #F4F6F2  (texto principal, blanco roto)
+     --ink       #F4F6F2  (texto principal, blanco roto)
      --muted     #8B939E  (texto secundario)
      --accent    #C8FF4D  (verde lima eléctrico — señal/onda)
      --accent-2  #FF5C8A  (magenta — error / contraste)
@@ -863,8 +863,39 @@ body.screen-stats-active .screen--stats {
 .side-panel-item--danger:hover { background: rgba(255,92,138,0.08); }
 
 /* ----------------------------------------------------------
-   Modal: compartir (QR + link)
+   Modal: apps de mensajería
    ---------------------------------------------------------- */
+.share-apps-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+.share-app-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 8px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  text-decoration: none;
+  color: var(--ink);
+  font-size: 0.78rem;
+  font-family: var(--font-display);
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+}
+
+.share-app-btn:hover {
+  background: var(--surface);
+  border-color: var(--accent);
+  transform: translateY(-2px);
+}
+
+.share-app-btn:active { transform: scale(0.96); }
 .share-link-box {
   display: flex;
   gap: 8px;

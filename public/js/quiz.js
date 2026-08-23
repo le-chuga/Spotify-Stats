@@ -156,7 +156,6 @@ function startCountdown() {
       el.textContent = "GO!";
       setTimeout(() => {
         showScreen("game");
-        document.getElementById("btn-exit-game").style.opacity = "0";
         startTime = Date.now();
         startTimer();
         showQuestion(0);
@@ -191,6 +190,9 @@ function formatTime(ms) {
 // ═══════════════════════════════════════════════════════
 function showQuestion(index) {
   if (index >= quizTracks.length) { endQuiz(); return; }
+
+  // Al inicio del quiz el botón salir está oculto (solo aparece al fallar)
+
 
   document.getElementById("game-progress").textContent = `${index + 1} / 10`;
   const track = quizTracks[index];
@@ -231,7 +233,7 @@ function handleAnswer(clickedBtn, chosen, correct, container) {
   });
 
   if (!isCorrect) {
-    document.getElementById("btn-exit-game").style.opacity = "1";
+    document.getElementById("btn-exit-game").classList.add("visible");
   }
 
   setTimeout(() => {
@@ -240,6 +242,10 @@ function handleAnswer(clickedBtn, chosen, correct, container) {
     else showQuestion(currentQ);
   }, 800);
 }
+
+// ═══════════════════════════════════════════════════════
+//  SALIR DURANTE EL JUEGO
+// ═══════════════════════════════════════════════════════
 
 
 // ═══════════════════════════════════════════════════════
