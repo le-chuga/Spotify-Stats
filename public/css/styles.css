@@ -863,8 +863,28 @@ body.screen-stats-active .screen--stats {
 .side-panel-item--danger:hover { background: rgba(255,92,138,0.08); }
 
 /* ----------------------------------------------------------
-   Modal: apps de mensajería
+   Modal de apps: animación scale + fade
    ---------------------------------------------------------- */
+.modal-animated {
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  pointer-events: none;
+}
+.modal-animated.modal-visible {
+  opacity: 1;
+  pointer-events: all;
+}
+.modal-animated[hidden] { display: none !important; }
+
+.modal-card-animated {
+  transform: scale(0.92);
+  transition: transform 0.25s ease, opacity 0.25s ease;
+  opacity: 0;
+}
+.modal-visible .modal-card-animated {
+  transform: scale(1);
+  opacity: 1;
+}
 .share-apps-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);

@@ -278,10 +278,8 @@ document.getElementById("side-panel-overlay").addEventListener("click", () => {
    9) Modal: Compartir
    ---------------------------------------------------------- */
 async function openShareModal() {
-  // Cerrar panel lateral
   closePanel("side-panel", "side-panel-overlay");
 
-  // Mostrar modal en estado "cargando"
   document.getElementById("share-loading-view").hidden = false;
   document.getElementById("share-ready-view").hidden = true;
   document.getElementById("share-error-view").hidden = true;
@@ -289,9 +287,21 @@ async function openShareModal() {
   document.getElementById("share-copy-feedback").textContent = "";
   document.getElementById("share-modal-overlay").hidden = false;
 
-  // Generar snapshot
-  const { ok, data } = await api.createShare();
+  // Obtener IP local del servidor para que el QR funcione en la misma red
+  let baseUrl = location.origin;
+  try {
+    const infoRes = await fetch("/api/server-info");
+    const info = await infoRes.json();
+    const h = location.hostname;
+    // Sustituir si estamos en local: localhost, 127.x, o IP privada (192.168.x, 10.x, 172.16-31.x)
+    const isLocal = h === "localhost" || h === "127.0.0.1" ||
+      /^192\.168\./.test(h) || /^10\./.test(h) || /^172\.(1[6-9]|2\d|3[01])\./.test(h);
+    if (isLocal) {
+      baseUrl = `http://${info.ip}:${info.port}`;
+    }
+  } catch { /* usar origin por defecto */ }
 
+  const { ok, data } = await api.createShare();
   document.getElementById("share-loading-view").hidden = true;
 
   if (!ok) {
@@ -300,10 +310,9 @@ async function openShareModal() {
     return;
   }
 
-  const shareUrl = `${location.origin}/share/${data.id}`;
+  const shareUrl = `${baseUrl}/share/${data.id}`;
   document.getElementById("share-link-input").value = shareUrl;
 
-  // Generar QR
   new QRCode(document.getElementById("share-qr"), {
     text: shareUrl,
     width: 180,
@@ -315,11 +324,69 @@ async function openShareModal() {
   document.getElementById("share-ready-view").hidden = false;
 }
 
+/* Animación para abrir/cerrar modales con scale+fade */
+function animateModalIn(overlayId) {
+  const overlay = document.getElementById(overlayId);
+  overlay.hidden = false;
+  // Forzar reflow para que la transición arranque desde el estado inicial
+  overlay.getBoundingClientRect();
+  overlay.classList.add("modal-visible");
+}
+
+function animateModalOut(overlayId, cb) {
+  const overlay = document.getElementById(overlayId);
+  overlay.classList.remove("modal-visible");
+  setTimeout(() => {
+    overlay.hidden = true;
+    if (cb) cb();
+  }, 260);
+}
+
+/* Botón Compartir dentro del modal QR → abre modal de apps */
+document.getElementById("btn-open-share-apps").addEventListener("click", () => {
+  const shareUrl = document.getElementById("share-link-input").value;
+  const text = encodeURIComponent("Mira mis estadísticas de escucha en Frecuencia: " + shareUrl);
+  const url = encodeURIComponent(shareUrl);
+
+  document.getElementById("share-whatsapp").href = `https://wa.me/?text=${text}`;
+  document.getElementById("share-telegram").href = `https://t.me/share/url?url=${url}&text=${encodeURIComponent("Mira mis estadísticas de escucha en Frecuencia")}`;
+  document.getElementById("share-twitter").href = `https://twitter.com/intent/tweet?text=${text}`;
+
+  // Nativo (Web Share API si está disponible)
+  const nativeBtn = document.getElementById("share-native");
+  nativeBtn.onclick = () => {
+    if (navigator.share) {
+      navigator.share({ title: "Frecuencia · Estadísticas", url: shareUrl });
+    } else {
+      navigator.clipboard.writeText(shareUrl);
+      nativeBtn.querySelector("span").textContent = "¡Copiado!";
+      setTimeout(() => nativeBtn.querySelector("span").textContent = "Más", 1500);
+    }
+  };
+
+  // Cerrar modal QR con hidden, luego abrir modal de apps con animación
+  document.getElementById("share-modal-overlay").hidden = true;
+  animateModalIn("share-apps-overlay");
+});
+
+/* Volver: cerrar apps → abrir QR */
+document.getElementById("btn-close-share-apps").addEventListener("click", () => {
+  animateModalOut("share-apps-overlay", () => {
+    document.getElementById("share-modal-overlay").hidden = false;
+  });
+});
+
+/* Cerrar modal de apps al hacer click fuera */
+document.getElementById("share-apps-overlay").addEventListener("click", (e) => {
+  if (e.target === e.currentTarget) {
+    animateModalOut("share-apps-overlay", null);
+  }
+});
+
 document.getElementById("btn-quizzes-panel").addEventListener("click", () => {
   closePanel("side-panel", "side-panel-overlay");
   setTimeout(() => { location.href = "/quiz"; }, 300);
 });
-
 
 document.getElementById("btn-share-panel").addEventListener("click", openShareModal);
 
