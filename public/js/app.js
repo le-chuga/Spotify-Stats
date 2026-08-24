@@ -11,7 +11,6 @@ import * as ui from "./ui.js";
    1) Comprobar al cargar si ya hay sesión / Spotify vinculado
    ---------------------------------------------------------- */
 async function init() {
-  // Si Spotify acaba de redirigir aquí tras vincular la cuenta...
   const params = new URLSearchParams(window.location.search);
   if (params.get("spotify_error")) {
     ui.showSpotifyLinkError("No se pudo vincular Spotify: " + params.get("spotify_error"));
@@ -25,13 +24,18 @@ async function init() {
   }
 
   if (params.get("spotify_linked")) {
-    // Acaba de volver del callback de Spotify -> cargar stats directamente.
     window.history.replaceState({}, "", window.location.pathname);
     await loadStats();
     return;
   }
 
-  // Sesión activa pero sin venir del callback: mostrar pantalla de conexión.
+  // Si ya tiene Spotify vinculado (vuelve del quiz, recarga, etc.) → ir directo a stats
+  if (data.hasSpotifyLinked) {
+    await loadStats();
+    return;
+  }
+
+  // Sesión activa pero sin Spotify vinculado → pantalla de conexión
   ui.showScreen("connect");
 }
 

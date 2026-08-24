@@ -57,7 +57,7 @@ async function bootstrap() {
   const snapshotUseCase = new SnapshotUseCase(snapshotRepository, userRepository, spotifyClient);
 
   // 5) Construir controladores
-  const authController = new AuthController(registerUserUseCase, loginUserUseCase);
+  const authController = new AuthController(registerUserUseCase, loginUserUseCase, userRepository);
   const spotifyController = new SpotifyController(
     spotifyClient, linkSpotifyAccountUseCase, getSpotifyStatsUseCase, createPlaylistFromArtistsUseCase
   );

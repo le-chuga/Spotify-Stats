@@ -9,9 +9,10 @@ class AuthController {
    * @param {import('../../../application/usecases/RegisterUserUseCase')} registerUserUseCase
    * @param {import('../../../application/usecases/LoginUserUseCase')} loginUserUseCase
    */
-  constructor(registerUserUseCase, loginUserUseCase) {
+  constructor(registerUserUseCase, loginUserUseCase, userRepository) {
     this.registerUserUseCase = registerUserUseCase;
     this.loginUserUseCase = loginUserUseCase;
+    this.userRepository = userRepository;
   }
 
   /** POST /api/auth/register */
@@ -56,9 +57,14 @@ class AuthController {
   };
 
   /** GET /api/auth/session */
-  session = (req, res) => {
+  session = async (req, res) => {
     if (req.session && req.session.accountId) {
-      return res.json({ loggedIn: true, accountId: req.session.accountId });
+      const user = await this.userRepository.findByAccountId(req.session.accountId);
+      return res.json({
+        loggedIn: true,
+        accountId: req.session.accountId,
+        hasSpotifyLinked: !!(user?.spotifyTokens),
+      });
     }
     return res.json({ loggedIn: false });
   };
