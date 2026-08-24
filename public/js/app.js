@@ -364,11 +364,6 @@ document.getElementById("btn-open-share-apps").addEventListener("click", () => {
     }
   };
 
-
-
-
-
-  
   // Cerrar modal QR con hidden, luego abrir modal de apps con animación
   document.getElementById("share-modal-overlay").hidden = true;
   animateModalIn("share-apps-overlay");
