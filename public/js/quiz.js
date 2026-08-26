@@ -30,13 +30,16 @@ async function loadSearchBackground() {
   const bg = document.getElementById("search-bg");
   for (const name of BACKGROUND_ARTISTS.slice(0, 15)) {
     try {
+      // Usamos entity=song porque artworkUrl100 de álbumes carga siempre,
+      // mientras que en entity=musicArtist frecuentemente viene vacío.
       const res = await fetch(
-        `https://itunes.apple.com/search?term=${encodeURIComponent(name)}&entity=musicArtist&limit=1`
+        `https://itunes.apple.com/search?term=${encodeURIComponent(name)}&entity=song&limit=1`
       );
       const data = await res.json();
-      if (data.results[0]?.artworkUrl100) {
+      const track = data.results.find((r) => r.wrapperType === "track" && r.artworkUrl100);
+      if (track?.artworkUrl100) {
         const img = document.createElement("img");
-        img.src = data.results[0].artworkUrl100.replace("100x100", "400x400");
+        img.src = track.artworkUrl100.replace("100x100", "400x400");
         img.alt = "";
         bg.appendChild(img);
       }
@@ -75,8 +78,17 @@ function renderSearchResults(results) {
     const div = document.createElement("div");
     div.className = "search-result-item";
     const img = document.createElement("img");
-    img.src = r.artworkUrl100 || "";
     img.alt = "";
+
+    // artworkUrl100 en entity=musicArtist viene vacío frecuentemente.
+    // Usamos la URL si existe, si no dejamos un placeholder y la rellenamos al seleccionar.
+    if (r.artworkUrl100) {
+      img.src = r.artworkUrl100;
+    } else {
+      img.src = "";
+      img.style.background = "#2a2d33";
+    }
+
     const span = document.createElement("span");
     span.textContent = r.artistName;
     div.append(img, span);
@@ -93,9 +105,27 @@ document.addEventListener("click", (e) => {
 async function selectArtist(artist) {
   searchResults.hidden = true;
   searchInput.value = artist.artistName;
+
+  // Intentar obtener imagen del artista; si artworkUrl100 viene vacío,
+  // usamos la portada de su primera canción como representación visual.
+  let imageUrl = artist.artworkUrl100?.replace("100x100", "300x300") || "";
+
+  if (!imageUrl) {
+    try {
+      const res = await fetch(
+        `https://itunes.apple.com/lookup?id=${artist.artistId}&entity=song&limit=1`
+      );
+      const data = await res.json();
+      const firstTrack = data.results.find((r) => r.wrapperType === "track");
+      if (firstTrack?.artworkUrl100) {
+        imageUrl = firstTrack.artworkUrl100.replace("100x100", "300x300");
+      }
+    } catch { /* mantener vacío si falla */ }
+  }
+
   selectedArtist = {
     name: artist.artistName,
-    imageUrl: artist.artworkUrl100?.replace("100x100", "300x300") || "",
+    imageUrl,
     itunesArtistId: artist.artistId,
   };
   document.getElementById("modal-artist-img").src = selectedArtist.imageUrl;
