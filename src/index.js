@@ -3,6 +3,7 @@ require("dotenv").config();
 const path = require("path");
 const express = require("express");
 const session = require("express-session");
+const axios = require("axios");
 
 // --- Infraestructura: Base de datos ---
 const { initDatabase } = require("./infrastructure/db/database");
@@ -117,6 +118,20 @@ async function bootstrap() {
 
   app.get("/api/server-info", (req, res) => {
     res.json({ ip: getLocalIP(), port: PORT });
+  });
+
+  // Proxy para Deezer: fotos reales de artistas sin problemas de CORS
+  app.get("/api/deezer/artists", async (req, res) => {
+    const { q } = req.query;
+    if (!q) return res.status(400).json({ error: "Falta q" });
+    try {
+      const response = await axios.get(
+        `https://api.deezer.com/search/artist?q=${encodeURIComponent(q)}&limit=8`
+      );
+      res.json(response.data);
+    } catch {
+      res.status(500).json({ data: [] });
+    }
   });
   app.get("/share/:id", (req, res) => {
     res.sendFile(path.join(__dirname, "..", "public", "share.html"));

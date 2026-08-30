@@ -1,7 +1,8 @@
 /**
  * quiz.js — Lógica del modo "Guess the Song"
- * Separado del HTML para mantener una arquitectura limpia.
- * Usa la iTunes Search API para búsqueda de artistas y previews de audio.
+ * - Fotos de artistas: Deezer API (fotos reales de artistas, sin API key)
+ * - Previews de audio: iTunes Search API (30s, gratuito)
+ * - Fondo animado: álbumes rotativos con fade cada 3 segundos
  */
 
 // ═══════════════════════════════════════════════════════
@@ -17,38 +18,72 @@ let correctCount = 0;
 let currentAudio = null;
 
 // ═══════════════════════════════════════════════════════
-//  FONDO ANIMADO: artistas famosos como mosaico
+//  FONDO ANIMADO: álbumes rotativos con fade cada 3s
 // ═══════════════════════════════════════════════════════
 const BACKGROUND_ARTISTS = [
   "Taylor Swift", "Bad Bunny", "Drake", "The Weeknd", "Billie Eilish",
-  "Kendrick Lamar", "Doja Cat", "Post Malone", "Ariana Grande", "Ed Sheeran",
-  "Harry Styles", "SZA", "Olivia Rodrigo", "Morgan Wallen", "Travis Scott",
-  "Peso Pluma", "Karol G", "Lil Durk", "21 Savage", "Metro Boomin",
+  "Kendrick Lamar", "Doja Cat", "Post Malone", "Ariana Grande",
+  "Harry Styles", "SZA", "Olivia Rodrigo", "Travis Scott",
+  "Metro Boomin","Carolina Durante",
+  "Las Petunias","C Tangana","Rosalía","Bad Gyal",
+  "Tyler, The Creator","J Balvin","Shakira","Daddy Yankee",
+  "The Marias ","Glass Animals","Tame Impala","Arctic Monkeys","The Strokes","Foo Fighters","Red Hot Chili Peppers",
+
 ];
 
 async function loadSearchBackground() {
   const bg = document.getElementById("search-bg");
-  for (const name of BACKGROUND_ARTISTS.slice(0, 15)) {
+
+  // Recoger URLs de portadas de álbumes desde iTunes
+  const albumUrls = [];
+  const shuffled = [...BACKGROUND_ARTISTS].sort(() => Math.random() - 0.5);
+
+  for (const name of shuffled) {
     try {
-      // Usamos entity=song porque artworkUrl100 de álbumes carga siempre,
-      // mientras que en entity=musicArtist frecuentemente viene vacío.
       const res = await fetch(
-        `https://itunes.apple.com/search?term=${encodeURIComponent(name)}&entity=song&limit=1`
+        `https://itunes.apple.com/search?term=${encodeURIComponent(name)}&entity=song&limit=3`
       );
       const data = await res.json();
-      const track = data.results.find((r) => r.wrapperType === "track" && r.artworkUrl100);
-      if (track?.artworkUrl100) {
-        const img = document.createElement("img");
-        img.src = track.artworkUrl100.replace("100x100", "400x400");
-        img.alt = "";
-        bg.appendChild(img);
-      }
-    } catch { /* ignorar errores individuales */ }
+      data.results
+        .filter((r) => r.wrapperType === "track" && r.artworkUrl100)
+        .forEach((r) => albumUrls.push(r.artworkUrl100.replace("100x100", "400x400")));
+    } catch { /* ignorar */ }
   }
+
+  if (!albumUrls.length) return;
+
+  // Crear celdas del grid y asignar imágenes iniciales
+  const CELLS = 15;
+  const cells = [];
+  for (let i = 0; i < CELLS; i++) {
+    const div = document.createElement("div");
+    div.style.cssText = "position:relative;overflow:hidden;";
+    const img = document.createElement("img");
+    img.style.cssText = "width:100%;height:100%;object-fit:cover;transition:opacity 1s ease;";
+    img.src = albumUrls[i % albumUrls.length];
+    div.appendChild(img);
+    bg.appendChild(div);
+    cells.push({ div, img, currentIndex: i });
+  }
+
+  // Rotar imágenes aleatoriamente: cada celda cambia cada 3s con offset aleatorio
+  cells.forEach((cell, idx) => {
+    setTimeout(() => {
+      setInterval(() => {
+        cell.img.style.opacity = "0";
+        setTimeout(() => {
+          cell.currentIndex = Math.floor(Math.random() * albumUrls.length);
+          cell.img.src = albumUrls[cell.currentIndex];
+          cell.img.style.opacity = "1";
+        }, 1000); // esperar a que termine el fade out antes de cambiar src
+      }, 3000);
+    }, Math.random() * 3000); // offset aleatorio para que no cambien todos a la vez
+  });
 }
 
 // ═══════════════════════════════════════════════════════
-//  BÚSQUEDA DE ARTISTAS (iTunes Search API)
+//  BÚSQUEDA DE ARTISTAS
+//  Usa Deezer para fotos reales + iTunes para el ID de artista
 // ═══════════════════════════════════════════════════════
 const searchInput = document.getElementById("artist-search-input");
 const searchResults = document.getElementById("search-results");
@@ -63,34 +98,33 @@ searchInput.addEventListener("input", () => {
 
 async function searchArtists(q) {
   try {
+    // Usamos el proxy del servidor para evitar posibles bloqueos CORS
     const res = await fetch(
-      `https://itunes.apple.com/search?term=${encodeURIComponent(q)}&entity=musicArtist&limit=8`
+      `/api/deezer/artists?q=${encodeURIComponent(q)}`
     );
     const data = await res.json();
-    renderSearchResults(data.results);
-  } catch { searchResults.hidden = true; }
+    renderSearchResults(data.data || []);
+  } catch {
+    searchResults.hidden = true;
+  }
 }
 
 function renderSearchResults(results) {
   searchResults.innerHTML = "";
   if (!results.length) { searchResults.hidden = true; return; }
+
   results.forEach((r) => {
     const div = document.createElement("div");
     div.className = "search-result-item";
+
     const img = document.createElement("img");
+    // picture_small es la foto real del artista en Deezer
+    img.src = r.picture_small || "";
     img.alt = "";
 
-    // artworkUrl100 en entity=musicArtist viene vacío frecuentemente.
-    // Usamos la URL si existe, si no dejamos un placeholder y la rellenamos al seleccionar.
-    if (r.artworkUrl100) {
-      img.src = r.artworkUrl100;
-    } else {
-      img.src = "";
-      img.style.background = "#2a2d33";
-    }
-
     const span = document.createElement("span");
-    span.textContent = r.artistName;
+    span.textContent = r.name;
+
     div.append(img, span);
     div.addEventListener("click", () => selectArtist(r));
     searchResults.appendChild(div);
@@ -102,34 +136,31 @@ document.addEventListener("click", (e) => {
   if (!e.target.closest(".search-input-wrap")) searchResults.hidden = true;
 });
 
-async function selectArtist(artist) {
+async function selectArtist(deezerArtist) {
   searchResults.hidden = true;
-  searchInput.value = artist.artistName;
+  searchInput.value = deezerArtist.name;
 
-  // Intentar obtener imagen del artista; si artworkUrl100 viene vacío,
-  // usamos la portada de su primera canción como representación visual.
-  let imageUrl = artist.artworkUrl100?.replace("100x100", "300x300") || "";
+  // Foto real del artista desde Deezer (picture_medium o picture_big)
+  const imageUrl = deezerArtist.picture_medium || deezerArtist.picture_small || "";
 
-  if (!imageUrl) {
-    try {
-      const res = await fetch(
-        `https://itunes.apple.com/lookup?id=${artist.artistId}&entity=song&limit=1`
-      );
-      const data = await res.json();
-      const firstTrack = data.results.find((r) => r.wrapperType === "track");
-      if (firstTrack?.artworkUrl100) {
-        imageUrl = firstTrack.artworkUrl100.replace("100x100", "300x300");
-      }
-    } catch { /* mantener vacío si falla */ }
-  }
+  // Buscar el ID de iTunes del artista para los previews de audio
+  let itunesArtistId = null;
+  try {
+    const res = await fetch(
+      `https://itunes.apple.com/search?term=${encodeURIComponent(deezerArtist.name)}&entity=musicArtist&limit=1`
+    );
+    const data = await res.json();
+    if (data.results[0]) itunesArtistId = data.results[0].artistId;
+  } catch { /* continuar sin ID, fetchArtistTracks buscará por nombre */ }
 
   selectedArtist = {
-    name: artist.artistName,
+    name: deezerArtist.name,
     imageUrl,
-    itunesArtistId: artist.artistId,
+    itunesArtistId,
   };
-  document.getElementById("modal-artist-img").src = selectedArtist.imageUrl;
-  document.getElementById("modal-artist-name").textContent = selectedArtist.name;
+
+  document.getElementById("modal-artist-img").src = imageUrl;
+  document.getElementById("modal-artist-name").textContent = deezerArtist.name;
   document.getElementById("modal-artist-meta").textContent = "Guess the Song";
   document.getElementById("quiz-artist-modal").hidden = false;
 }
@@ -139,7 +170,7 @@ async function selectArtist(artist) {
 // ═══════════════════════════════════════════════════════
 document.getElementById("btn-start-quiz").addEventListener("click", async () => {
   document.getElementById("quiz-artist-modal").hidden = true;
-  const tracks = await fetchArtistTracks(selectedArtist.itunesArtistId);
+  const tracks = await fetchArtistTracks();
   if (tracks.length < 4) {
     alert("No se encontraron suficientes canciones con preview. Prueba con otro artista.");
     document.getElementById("quiz-artist-modal").hidden = false;
@@ -152,10 +183,16 @@ document.getElementById("btn-start-quiz").addEventListener("click", async () => 
   startCountdown();
 });
 
-async function fetchArtistTracks(artistId) {
-  const res = await fetch(
-    `https://itunes.apple.com/lookup?id=${artistId}&entity=song&limit=50`
-  );
+async function fetchArtistTracks() {
+  // Buscar por ID si lo tenemos, si no por nombre
+  let url;
+  if (selectedArtist.itunesArtistId) {
+    url = `https://itunes.apple.com/lookup?id=${selectedArtist.itunesArtistId}&entity=song&limit=50`;
+  } else {
+    url = `https://itunes.apple.com/search?term=${encodeURIComponent(selectedArtist.name)}&entity=song&limit=50`;
+  }
+
+  const res = await fetch(url);
   const data = await res.json();
   return data.results
     .filter((r) => r.wrapperType === "track" && r.previewUrl)
@@ -249,19 +286,16 @@ function showQuestion(index) {
 }
 
 function handleAnswer(clickedBtn, chosen, correct, container) {
-  // Deshabilitar todos los botones inmediatamente
   container.querySelectorAll(".game-option").forEach((b) => (b.disabled = true));
 
   const isCorrect = chosen === correct;
   if (isCorrect) correctCount++;
 
-  // Colorear: correcta en verde, la pulsada en rojo si era incorrecta
   container.querySelectorAll(".game-option").forEach((b) => {
     if (b.textContent === correct) b.classList.add("correct");
     else if (b === clickedBtn && !isCorrect) b.classList.add("wrong");
   });
 
-  // Tanto si acierta como si falla, continúa a la siguiente pregunta tras 3 segundos
   setTimeout(() => {
     currentQ++;
     if (currentQ >= 10) endQuiz();
@@ -332,6 +366,7 @@ function showLeaderboard(leaderboard) {
 }
 
 document.getElementById("btn-play-again").addEventListener("click", () => {
+  searchInput.value = "";
   showScreen("search");
 });
 
@@ -352,5 +387,4 @@ function shuffle(arr) {
   return a;
 }
 
-// Arrancar fondo al cargar
 loadSearchBackground();
