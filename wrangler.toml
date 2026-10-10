@@ -10,11 +10,11 @@ binding = "ASSETS"
 [[d1_databases]]
 binding = "DB"
 database_name = "frecuencia-db"
-database_id = "REPLACE_WITH_YOUR_D1_ID"
+database_id = "290d4b9a-0c67-4baa-a6d6-cef5f59fa78a"
 
 [[kv_namespaces]]
 binding = "SESSIONS"
-id = "REPLACE_WITH_YOUR_KV_ID"
+id = "139476c6a884485b89543bdf56571fbd"
 
 [vars]
 SPOTIFY_REDIRECT_URI = "https://frecuencia.workers.dev/api/spotify/callback"
