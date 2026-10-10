@@ -1,0 +1,20 @@
+{
+  "name": "frecuencia",
+  "version": "1.0.0",
+  "description": "Frecuencia - Spotify Stats en Cloudflare Workers",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "db:create": "wrangler d1 create frecuencia-db",
+    "db:migrate": "wrangler d1 execute frecuencia-db --file=schema.sql",
+    "db:migrate:remote": "wrangler d1 execute frecuencia-db --remote --file=schema.sql",
+    "kv:create": "wrangler kv namespace create SESSIONS"
+  },
+  "dependencies": {
+    "hono": "4.13.11"
+  },
+  "devDependencies": {
+    "wrangler": "^4.0.0"
+  }
+}
