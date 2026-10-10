@@ -1,349 +1,390 @@
 /**
- * ui.js
- * Capa de presentación del frontend: todo lo que toca el DOM vive aquí.
- * app.js orquesta el flujo y llama a estas funciones; estas funciones
- * no conocen la API ni la lógica de negocio.
+ * quiz.js — Lógica del modo "Guess the Song"
+ * - Fotos de artistas: Deezer API (fotos reales de artistas, sin API key)
+ * - Previews de audio: iTunes Search API (30s, gratuito)
+ * - Fondo animado: álbumes rotativos con fade cada 3 segundos
  */
 
-const screens = {
-  auth: document.getElementById("screen-auth"),
-  connect: document.getElementById("screen-connect"),
-  loading: document.getElementById("screen-loading"),
-  stats: document.getElementById("screen-stats"),
-};
+// ═══════════════════════════════════════════════════════
+//  ESTADO GLOBAL
+// ═══════════════════════════════════════════════════════
+let selectedArtist = null;
+let quizTracks = [];
+let currentQ = 0;
+let timerInterval = null;
+let startTime = 0;
+let elapsedMs = 0;
+let correctCount = 0;
+let currentAudio = null;
 
-/**
- * Muestra una pantalla y oculta el resto.
- * @param {'auth'|'connect'|'loading'|'stats'} name
- */
-export function showScreen(name) {
-  Object.entries(screens).forEach(([key, el]) => {
-    el.hidden = key !== name;
-  });
-  // La pantalla de stats puede necesitar más altura que el viewport:
-  // activamos scroll de página solo para ella.
-  document.body.classList.toggle("screen-stats-active", name === "stats");
-}
+// ═══════════════════════════════════════════════════════
+//  FONDO ANIMADO: álbumes rotativos con fade cada 3s
+// ═══════════════════════════════════════════════════════
+const BACKGROUND_ARTISTS = [
+  "Taylor Swift", "Bad Bunny", "Drake", "The Weeknd", "Billie Eilish",
+  "Kendrick Lamar", "Doja Cat", "Post Malone", "Ariana Grande",
+  "Harry Styles", "SZA", "Olivia Rodrigo", "Travis Scott",
+  "Metro Boomin","Carolina Durante",
+  "Las Petunias","C Tangana","Rosalía","Bad Gyal",
+  "Tyler, The Creator","J Balvin","Shakira","Daddy Yankee",
+  "The Marias ","Glass Animals","Tame Impala","Arctic Monkeys","The Strokes","Foo Fighters","Red Hot Chili Peppers",
 
-/* ----------------------------------------------------------
-   Formularios de autenticación
-   ---------------------------------------------------------- */
+];
 
-const els = {
-  formLogin: document.getElementById("form-login"),
-  formRegister: document.getElementById("form-register"),
+async function loadSearchBackground() {
+  const bg = document.getElementById("search-bg");
 
-  loginId: document.getElementById("login-id"),
-  loginPassword: document.getElementById("login-password"),
-  errorLoginId: document.getElementById("error-login-id"),
-  errorLoginPassword: document.getElementById("error-login-password"),
-  formErrorLogin: document.getElementById("form-error-login"),
-  formSuccessLogin: document.getElementById("form-success-login"),
+  // Recoger URLs de portadas de álbumes desde iTunes
+  const albumUrls = [];
+  const shuffled = [...BACKGROUND_ARTISTS].sort(() => Math.random() - 0.5);
 
-  registerId: document.getElementById("register-id"),
-  registerPassword: document.getElementById("register-password"),
-  errorRegisterId: document.getElementById("error-register-id"),
-  errorRegisterPassword: document.getElementById("error-register-password"),
-  formErrorRegister: document.getElementById("form-error-register"),
-  formSuccessRegister: document.getElementById("form-success-register"),
-
-  btnShowRegister: document.getElementById("btn-show-register"),
-  btnBackToLogin: document.getElementById("btn-back-to-login"),
-
-  spotifyLinkError: document.getElementById("spotify-link-error"),
-};
-
-/** Limpia todos los mensajes de error/éxito de ambos formularios */
-export function clearAuthMessages() {
-  [
-    els.errorLoginId,
-    els.errorLoginPassword,
-    els.errorRegisterId,
-    els.errorRegisterPassword,
-  ].forEach((el) => (el.textContent = ""));
-
-  [els.formErrorLogin, els.formErrorRegister].forEach((el) => {
-    el.textContent = "";
-    el.classList.remove("visible");
-  });
-
-  [els.formSuccessLogin, els.formSuccessRegister].forEach((el) => {
-    el.textContent = "";
-    el.classList.remove("visible");
-  });
-
-  [els.loginId, els.loginPassword, els.registerId, els.registerPassword].forEach((el) =>
-    el.classList.remove("input--error")
-  );
-}
-
-/**
- * Muestra los errores de login devueltos por el backend.
- * - Si errorFields incluye 'accountId' y 'password' -> ambos bloques marcados,
- *   mensaje general indicando que ninguno coincide.
- * - Si solo incluye 'password' -> solo ese bloque marcado, "contraseña errónea".
- * - Si solo incluye 'accountId' -> solo ese bloque marcado, "Id erróneo".
- */
-export function showLoginError(message, errorFields = []) {
-  els.formErrorLogin.textContent = message;
-  els.formErrorLogin.classList.add("visible");
-
-  if (errorFields.includes("accountId")) {
-    els.loginId.classList.add("input--error");
-    els.errorLoginId.textContent = errorFields.length > 1 ? "Id incorrecto" : "Este Id es erróneo";
+  for (const name of shuffled) {
+    try {
+      const res = await fetch(
+        `https://itunes.apple.com/search?term=${encodeURIComponent(name)}&entity=song&limit=3`
+      );
+      const data = await res.json();
+      data.results
+        .filter((r) => r.wrapperType === "track" && r.artworkUrl100)
+        .forEach((r) => albumUrls.push(r.artworkUrl100.replace("100x100", "400x400")));
+    } catch { /* ignorar */ }
   }
-  if (errorFields.includes("password")) {
-    els.loginPassword.classList.add("input--error");
-    els.errorLoginPassword.textContent =
-      errorFields.length > 1 ? "Contraseña incorrecta" : "Esta contraseña es errónea";
+
+  if (!albumUrls.length) return;
+
+  // Crear celdas del grid y asignar imágenes iniciales
+  const CELLS = 15;
+  const cells = [];
+  for (let i = 0; i < CELLS; i++) {
+    const div = document.createElement("div");
+    div.style.cssText = "position:relative;overflow:hidden;";
+    const img = document.createElement("img");
+    img.style.cssText = "width:100%;height:100%;object-fit:cover;transition:opacity 1s ease;";
+    img.src = albumUrls[i % albumUrls.length];
+    div.appendChild(img);
+    bg.appendChild(div);
+    cells.push({ div, img, currentIndex: i });
   }
+
+  // Rotar imágenes aleatoriamente: cada celda cambia cada 3s con offset aleatorio
+  cells.forEach((cell, idx) => {
+    setTimeout(() => {
+      setInterval(() => {
+        cell.img.style.opacity = "0";
+        setTimeout(() => {
+          cell.currentIndex = Math.floor(Math.random() * albumUrls.length);
+          cell.img.src = albumUrls[cell.currentIndex];
+          cell.img.style.opacity = "1";
+        }, 1000); // esperar a que termine el fade out antes de cambiar src
+      }, 3000);
+    }, Math.random() * 3000); // offset aleatorio para que no cambien todos a la vez
+  });
 }
 
-export function showLoginSuccess(message) {
-  els.formSuccessLogin.textContent = message;
-  els.formSuccessLogin.classList.add("visible");
-}
+// ═══════════════════════════════════════════════════════
+//  BÚSQUEDA DE ARTISTAS
+//  Usa Deezer para fotos reales + iTunes para el ID de artista
+// ═══════════════════════════════════════════════════════
+const searchInput = document.getElementById("artist-search-input");
+const searchResults = document.getElementById("search-results");
+let searchTimeout = null;
 
-export function showRegisterError(message) {
-  els.formErrorRegister.textContent = message;
-  els.formErrorRegister.classList.add("visible");
+searchInput.addEventListener("input", () => {
+  clearTimeout(searchTimeout);
+  const q = searchInput.value.trim();
+  if (q.length < 2) { searchResults.hidden = true; return; }
+  searchTimeout = setTimeout(() => searchArtists(q), 350);
+});
 
-  if (message.toLowerCase().includes("id de cuenta ya existe")) {
-    els.registerId.classList.add("input--error");
+async function searchArtists(q) {
+  try {
+    // Usamos el proxy del servidor para evitar posibles bloqueos CORS
+    const res = await fetch(
+      `/api/deezer/artists?q=${encodeURIComponent(q)}`
+    );
+    const data = await res.json();
+    renderSearchResults(data.data || []);
+  } catch {
+    searchResults.hidden = true;
   }
 }
 
-export function showRegisterSuccess(message) {
-  els.formSuccessRegister.textContent = message;
-  els.formSuccessRegister.classList.add("visible");
+function renderSearchResults(results) {
+  searchResults.innerHTML = "";
+  if (!results.length) { searchResults.hidden = true; return; }
+
+  results.forEach((r) => {
+    const div = document.createElement("div");
+    div.className = "search-result-item";
+
+    const img = document.createElement("img");
+    // picture_small es la foto real del artista en Deezer
+    img.src = r.picture_small || "";
+    img.alt = "";
+
+    const span = document.createElement("span");
+    span.textContent = r.name;
+
+    div.append(img, span);
+    div.addEventListener("click", () => selectArtist(r));
+    searchResults.appendChild(div);
+  });
+  searchResults.hidden = false;
 }
 
-/** Cambia entre el formulario de login y el de registro */
-export function toggleRegisterForm(showRegister) {
-  clearAuthMessages();
-  els.formLogin.classList.toggle("auth-form--hidden", showRegister);
-  els.formRegister.classList.toggle("auth-form--hidden", !showRegister);
+document.addEventListener("click", (e) => {
+  if (!e.target.closest(".search-input-wrap")) searchResults.hidden = true;
+});
+
+async function selectArtist(deezerArtist) {
+  searchResults.hidden = true;
+  searchInput.value = deezerArtist.name;
+
+  // Foto real del artista desde Deezer (picture_medium o picture_big)
+  const imageUrl = deezerArtist.picture_medium || deezerArtist.picture_small || "";
+
+  // Buscar el ID de iTunes del artista para los previews de audio
+  let itunesArtistId = null;
+  try {
+    const res = await fetch(
+      `https://itunes.apple.com/search?term=${encodeURIComponent(deezerArtist.name)}&entity=musicArtist&limit=1`
+    );
+    const data = await res.json();
+    if (data.results[0]) itunesArtistId = data.results[0].artistId;
+  } catch { /* continuar sin ID, fetchArtistTracks buscará por nombre */ }
+
+  selectedArtist = {
+    name: deezerArtist.name,
+    imageUrl,
+    itunesArtistId,
+  };
+
+  document.getElementById("modal-artist-img").src = imageUrl;
+  document.getElementById("modal-artist-name").textContent = deezerArtist.name;
+  document.getElementById("modal-artist-meta").textContent = "Guess the Song";
+  document.getElementById("quiz-artist-modal").hidden = false;
 }
 
-export function getLoginValues() {
-  return { accountId: els.loginId.value, password: els.loginPassword.value };
-}
-
-export function getRegisterValues() {
-  return { accountId: els.registerId.value, password: els.registerPassword.value };
-}
-
-export function resetRegisterForm() {
-  els.registerId.value = "";
-  els.registerPassword.value = "";
-}
-
-export function showSpotifyLinkError(message) {
-  els.spotifyLinkError.textContent = message;
-}
-
-/* ----------------------------------------------------------
-   Pantalla de estadísticas
-   ---------------------------------------------------------- */
-
-const statsEls = {
-  error: document.getElementById("stats-error"),
-  displayName: document.getElementById("stats-display-name"),
-  meta: document.getElementById("profile-meta"),
-  topTracks: document.getElementById("list-top-tracks"),
-  topArtists: document.getElementById("list-top-artists"),
-  recent: document.getElementById("list-recent"),
-};
-
-export function showStatsError(message) {
-  statsEls.error.textContent = message;
-  statsEls.error.hidden = false;
-}
-
-function renderList(container, items, mapFn) {
-  container.innerHTML = "";
-  if (!items || items.length === 0) {
-    const li = document.createElement("li");
-    li.className = "stats-empty";
-    li.textContent = "No hay datos disponibles todavía.";
-    container.appendChild(li);
+// ═══════════════════════════════════════════════════════
+//  START → cargar canciones → cuenta atrás → juego
+// ═══════════════════════════════════════════════════════
+document.getElementById("btn-start-quiz").addEventListener("click", async () => {
+  document.getElementById("quiz-artist-modal").hidden = true;
+  const tracks = await fetchArtistTracks();
+  if (tracks.length < 4) {
+    alert("No se encontraron suficientes canciones con preview. Prueba con otro artista.");
+    document.getElementById("quiz-artist-modal").hidden = false;
     return;
   }
-  items.forEach((item) => container.appendChild(mapFn(item)));
-}
+  quizTracks = shuffle(tracks).slice(0, 10);
+  currentQ = 0;
+  correctCount = 0;
+  showScreen("countdown");
+  startCountdown();
+});
 
-function buildListItem({ imageUrl, title, subtitle }) {
-  const li = document.createElement("li");
-
-  if (imageUrl) {
-    const img = document.createElement("img");
-    img.src = imageUrl;
-    img.alt = "";
-    li.appendChild(img);
+async function fetchArtistTracks() {
+  // Buscar por ID si lo tenemos, si no por nombre
+  let url;
+  if (selectedArtist.itunesArtistId) {
+    url = `https://itunes.apple.com/lookup?id=${selectedArtist.itunesArtistId}&entity=song&limit=50`;
+  } else {
+    url = `https://itunes.apple.com/search?term=${encodeURIComponent(selectedArtist.name)}&entity=song&limit=50`;
   }
 
-  const textWrap = document.createElement("div");
-  textWrap.className = "item-text";
-
-  const titleEl = document.createElement("p");
-  titleEl.className = "item-title";
-  titleEl.textContent = title;
-
-  const subtitleEl = document.createElement("p");
-  subtitleEl.className = "item-subtitle";
-  subtitleEl.textContent = subtitle;
-
-  textWrap.append(titleEl, subtitleEl);
-  li.appendChild(textWrap);
-  return li;
+  const res = await fetch(url);
+  const data = await res.json();
+  return data.results
+    .filter((r) => r.wrapperType === "track" && r.previewUrl)
+    .map((r) => ({
+      trackName: r.trackName,
+      albumImg: r.artworkUrl100?.replace("100x100", "400x400") || "",
+      previewUrl: r.previewUrl,
+    }));
 }
 
-/**
- * Renderiza las estadísticas reales de Spotify en la pantalla de stats.
- * @param {object} stats - tal y como lo devuelve GetSpotifyStatsUseCase
- */
-export function renderSpotifyStats(stats) {
-  statsEls.error.hidden = true;
+// ═══════════════════════════════════════════════════════
+//  CUENTA ATRÁS 3 → 2 → 1 → GO!
+// ═══════════════════════════════════════════════════════
+function startCountdown() {
+  const el = document.getElementById("countdown-number");
+  let n = 3;
+  el.textContent = n;
 
-  if (stats.profile) {
-    statsEls.displayName.textContent = stats.profile.displayName || "Tu perfil";
-    statsEls.meta.textContent = `${stats.profile.followers} seguidores`;
-  }
-
-  renderList(statsEls.topTracks, stats.topTracks, (t) =>
-    buildListItem({ imageUrl: t.imageUrl, title: t.name, subtitle: t.artist })
-  );
-
-  renderList(statsEls.topArtists, stats.topArtists, (a) =>
-    buildListItem({
-      imageUrl: a.imageUrl,
-      title: a.name,
-      subtitle: a.genres?.slice(0, 2).join(", ") || "Sin géneros listados",
-    })
-  );
-
-  renderList(statsEls.recent, stats.recentlyPlayed, (r) =>
-    buildListItem({
-      imageUrl: r.imageUrl,
-      title: r.name,
-      subtitle: `${r.artist} · ${new Date(r.playedAt).toLocaleString("es-ES")}`,
-    })
-  );
+  const iv = setInterval(() => {
+    n--;
+    if (n > 0) {
+      el.textContent = n;
+      el.style.animation = "none";
+      el.getBoundingClientRect();
+      el.style.animation = "countPulse 0.9s ease-in-out";
+    } else {
+      clearInterval(iv);
+      el.textContent = "GO!";
+      setTimeout(() => {
+        showScreen("game");
+        startTime = Date.now();
+        startTimer();
+        showQuestion(0);
+      }, 600);
+    }
+  }, 1000);
 }
 
-const modalEls = {
-  overlay: document.getElementById("playlist-modal-overlay"),
-  artistList: document.getElementById("artist-select-list"),
-  titleInput: document.getElementById("playlist-title-input"),
-  btnOpen: document.getElementById("btn-open-playlist-modal"),
-  btnConfirm: document.getElementById("btn-confirm-playlist"),
-  btnCancel: document.getElementById("btn-cancel-playlist"),
-  btnCloseSuccess: document.getElementById("btn-close-playlist-success"),
-  error: document.getElementById("playlist-modal-error"),
-  success: document.getElementById("playlist-modal-success"),
-  viewSelect: document.getElementById("modal-view-select"),
-  viewSuccess: document.getElementById("modal-view-success"),
-};
-
-export function showPlaylistButton(artists) {
-  modalEls.btnOpen.hidden = false;
-  modalEls.btnOpen._artists = artists;
+// ═══════════════════════════════════════════════════════
+//  TIMER: MM:SS:MMM
+// ═══════════════════════════════════════════════════════
+function startTimer() {
+  timerInterval = setInterval(() => {
+    elapsedMs = Date.now() - startTime;
+    document.getElementById("game-timer").textContent = formatTime(elapsedMs);
+  }, 17);
 }
 
-export function openPlaylistModal() {
-  const artists = modalEls.btnOpen._artists || [];
-  modalEls.artistList.innerHTML = "";
-  modalEls.error.textContent = "";
-  modalEls.error.classList.remove("visible");
-  modalEls.titleInput.value = "";
-  modalEls.viewSelect.hidden = false;
-  modalEls.viewSuccess.hidden = true;
+function stopTimer() {
+  clearInterval(timerInterval);
+}
 
-  artists.forEach((artist) => {
-    const li = document.createElement("li");
-    const label = document.createElement("label");
-    label.className = "artist-select-option";
+function formatTime(ms) {
+  const mins = Math.floor(ms / 60000).toString().padStart(2, "0");
+  const secs = Math.floor((ms % 60000) / 1000).toString().padStart(2, "0");
+  const millis = Math.floor(ms % 1000).toString().padStart(3, "0");
+  return `${mins}:${secs}:${millis}`;
+}
 
-    const checkbox = document.createElement("input");
-    checkbox.type = "checkbox";
-    checkbox.value = artist.name;
+// ═══════════════════════════════════════════════════════
+//  PREGUNTA
+// ═══════════════════════════════════════════════════════
+function showQuestion(index) {
+  if (index >= quizTracks.length) { endQuiz(); return; }
 
-    const img = document.createElement("img");
-    img.src = artist.imageUrl || "";
-    img.alt = "";
+  document.getElementById("game-progress").textContent = `${index + 1} / 10`;
+  const track = quizTracks[index];
 
-    const name = document.createElement("span");
-    name.textContent = artist.name;
+  document.getElementById("game-album-img").src = track.albumImg;
 
-    label.append(checkbox, img, name);
-    li.appendChild(label);
-    modalEls.artistList.appendChild(li);
+  if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+  currentAudio = new Audio(track.previewUrl);
+  currentAudio.volume = 0.8;
+  currentAudio.play().catch(() => {});
+
+  const wrongPool = quizTracks.filter((_, i) => i !== index);
+  const wrongs = shuffle(wrongPool).slice(0, 3).map((t) => t.trackName);
+  const options = shuffle([track.trackName, ...wrongs]);
+
+  const container = document.getElementById("game-options");
+  container.innerHTML = "";
+  options.forEach((opt) => {
+    const btn = document.createElement("button");
+    btn.className = "game-option";
+    btn.textContent = opt;
+    btn.addEventListener("click", () =>
+      handleAnswer(btn, opt, track.trackName, container)
+    );
+    container.appendChild(btn);
+  });
+}
+
+function handleAnswer(clickedBtn, chosen, correct, container) {
+  container.querySelectorAll(".game-option").forEach((b) => (b.disabled = true));
+
+  const isCorrect = chosen === correct;
+  if (isCorrect) correctCount++;
+
+  container.querySelectorAll(".game-option").forEach((b) => {
+    if (b.textContent === correct) b.classList.add("correct");
+    else if (b === clickedBtn && !isCorrect) b.classList.add("wrong");
   });
 
-  modalEls.overlay.hidden = false;
-  setTimeout(() => modalEls.titleInput.focus(), 100);
+  setTimeout(() => {
+    currentQ++;
+    if (currentQ >= 10) endQuiz();
+    else showQuestion(currentQ);
+  }, 800);
 }
 
-export function closePlaylistModal() {
-  modalEls.overlay.hidden = true;
+// ═══════════════════════════════════════════════════════
+//  FIN DEL QUIZ
+// ═══════════════════════════════════════════════════════
+async function endQuiz() {
+  stopTimer();
+  if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+
+  try {
+    await fetch("/api/quiz/result", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        artistName: selectedArtist.name,
+        timeMs: elapsedMs,
+        correctAnswers: correctCount,
+      }),
+    });
+  } catch { /* continuar aunque falle el guardado */ }
+
+  const lb = await fetch(
+    `/api/quiz/leaderboard?artist=${encodeURIComponent(selectedArtist.name)}`
+  );
+  const lbData = await lb.json();
+  showLeaderboard(lbData.leaderboard || []);
 }
 
-export function getSelectedArtists() {
-  return [...modalEls.artistList.querySelectorAll("input[type='checkbox']:checked")]
-    .map((cb) => cb.value);
-}
+function showLeaderboard(leaderboard) {
+  document.getElementById("lb-artist-title").textContent = selectedArtist.name;
+  document.getElementById("lb-my-time").textContent = formatTime(elapsedMs);
+  document.getElementById("lb-my-sub").textContent =
+    correctCount === 10
+      ? "¡10/10 correctas!"
+      : `${correctCount}/10 correctas — necesitas 10/10 para entrar en el top`;
 
-export function getPlaylistTitle() {
-  return modalEls.titleInput.value.trim();
-}
+  const tbody = document.getElementById("lb-body");
+  tbody.innerHTML = "";
 
-export function showPlaylistModalError(message) {
-  modalEls.error.textContent = message;
-  modalEls.error.classList.add("visible");
-}
-
-export function showPlaylistModalSuccess(message) {
-  modalEls.viewSelect.hidden = true;
-  modalEls.viewSuccess.hidden = false;
-  modalEls.success.textContent = message;
-}
-
-export function resetPlaylistModal() {
-  modalEls.btnConfirm.disabled = false;
-  modalEls.btnConfirm.textContent = "Crear playlist";
-  modalEls.viewSelect.hidden = false;
-  modalEls.viewSuccess.hidden = true;
-}
-
-export const modal = modalEls;
-export const elements = els;
-
-/* ----------------------------------------------------------
-   Avatar de perfil
-   ---------------------------------------------------------- */
-const avatarEls = {
-  wrapper: document.getElementById("avatar-wrapper"),
-  circle: document.getElementById("avatar-circle"),
-  placeholder: document.getElementById("avatar-placeholder"),
-  img: document.getElementById("avatar-img"),
-  input: document.getElementById("avatar-input"),
-};
-
-/**
- * Muestra la imagen de avatar si existe, o el placeholder (cruz) si no.
- * @param {string|null} avatarBase64
- */
-export function renderAvatar(avatarBase64) {
-  if (avatarBase64) {
-    avatarEls.img.src = avatarBase64;
-    avatarEls.img.hidden = false;
-    avatarEls.placeholder.style.display = "none";
+  if (!leaderboard.length) {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td colspan="3" style="color:var(--muted);text-align:center;padding:20px;">
+      Sé el primero en el leaderboard con 10/10
+    </td>`;
+    tbody.appendChild(tr);
   } else {
-    avatarEls.img.hidden = true;
-    avatarEls.placeholder.style.display = "";
+    leaderboard.forEach((row, i) => {
+      const tr = document.createElement("tr");
+      if (i === 0) tr.className = "lb-rank-1";
+      else if (i === 1) tr.className = "lb-rank-2";
+      else if (i === 2) tr.className = "lb-rank-3";
+      const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `${i + 1}`;
+      tr.innerHTML = `
+        <td>${medal}</td>
+        <td>${row.account_id}</td>
+        <td class="lb-time-cell">${formatTime(row.best_time)}</td>
+      `;
+      tbody.appendChild(tr);
+    });
   }
+
+  showScreen("leaderboard");
 }
 
-/** Devuelve los elementos del avatar para conectar eventos en app.js */
-export const avatarElements = avatarEls;
+document.getElementById("btn-play-again").addEventListener("click", () => {
+  searchInput.value = "";
+  showScreen("search");
+});
 
+// ═══════════════════════════════════════════════════════
+//  UTILIDADES
+// ═══════════════════════════════════════════════════════
+function showScreen(name) {
+  document.querySelectorAll(".quiz-screen").forEach((s) => (s.hidden = true));
+  document.getElementById("screen-" + name).hidden = false;
+}
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+loadSearchBackground();
