@@ -17,4 +17,4 @@ binding = "SESSIONS"
 id = "139476c6a884485b89543bdf56571fbd"
 
 [vars]
-SPOTIFY_REDIRECT_URI = "https://frecuencia.workers.dev/api/spotify/callback"
+SPOTIFY_REDIRECT_URI = "https://frecuencia.le-chugassubdomain.workers.dev/api/spotify/callback"
