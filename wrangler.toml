@@ -1,0 +1,20 @@
+name = "frecuencia"
+main = "src/worker.js"
+compatibility_date = "2024-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+[assets]
+directory = "./public"
+binding = "ASSETS"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "frecuencia-db"
+database_id = "REPLACE_WITH_YOUR_D1_ID"
+
+[[kv_namespaces]]
+binding = "SESSIONS"
+id = "REPLACE_WITH_YOUR_KV_ID"
+
+[vars]
+SPOTIFY_REDIRECT_URI = "https://frecuencia.workers.dev/api/spotify/callback"

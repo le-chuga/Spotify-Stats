@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Frecuencia · Estadísticas compartidas</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+  <style>
+    .share-header {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+    .share-avatar {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid var(--line);
+      background: #2a2d33;
+      display: block;
+      margin: 0 auto 12px;
+    }
+    .share-avatar-placeholder {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      background: #2a2d33;
+      border: 2px solid var(--line);
+      margin: 0 auto 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .share-name {
+      font-size: 1.8rem;
+      font-weight: 700;
+      margin: 0 0 4px;
+    }
+    .share-meta {
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      color: var(--muted);
+      margin: 0 0 6px;
+    }
+    .share-badge {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      letter-spacing: 0.1em;
+      color: var(--accent);
+      text-transform: uppercase;
+    }
+    .share-loading {
+      text-align: center;
+      color: var(--muted);
+      font-family: var(--font-mono);
+      font-size: 0.9rem;
+      margin-top: 60px;
+    }
+    .share-error {
+      text-align: center;
+      color: var(--accent-2);
+      font-size: 1rem;
+      margin-top: 60px;
+    }
+    .share-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    .share-block--wide { grid-column: 1 / -1; }
+    @media (max-width: 720px) {
+      .share-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+  <style>
+    /* Permitir scroll en la página de snapshot */
+    html, body { overflow-y: auto !important; height: auto !important; }
+  </style>
+</head>
+<body>
+  <div class="eq-background" aria-hidden="true">
+    <div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div>
+    <div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div>
+    <div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div>
+    <div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div>
+    <div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div>
+    <div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div>
+    <div class="eq-bar"></div><div class="eq-bar"></div>
+  </div>
+
+  <div id="app" style="position:relative;z-index:1;max-width:1080px;margin:0 auto;padding:48px 24px;">
+    <p class="share-loading" id="loading-msg">Cargando estadísticas…</p>
+  </div>
+
+  <script src="/js/share.js" defer></script>
+</body>
+</html>
