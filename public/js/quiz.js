@@ -277,6 +277,7 @@ function showQuestion(index) {
   options.forEach((opt) => {
     const btn = document.createElement("button");
     btn.className = "game-option";
+    btn.style.color = "#fff";
     btn.textContent = opt;
     btn.addEventListener("click", () =>
       handleAnswer(btn, opt, track.trackName, container)
