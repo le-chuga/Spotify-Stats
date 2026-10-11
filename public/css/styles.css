@@ -466,19 +466,21 @@ body.screen-stats-active .screen--stats {
 }
 
 .stats-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  display: flex;
+  flex-wrap: wrap;
   gap: 20px;
 }
 
 .stats-block {
+  flex: 1 1 calc(50% - 10px);
+  min-width: 0;
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius);
   padding: 22px;
 }
 
-.stats-block--wide { grid-column: 1 / -1; }
+.stats-block--wide { flex-basis: 100%; }
 
 .stats-block-title {
   font-family: var(--font-mono);
@@ -716,7 +718,7 @@ body.screen-stats-active .screen--stats {
    Responsive
    ---------------------------------------------------------- */
 @media (max-width: 720px) {
-  .stats-grid { grid-template-columns: 1fr; }
+  .stats-block { flex-basis: 100%; }
   .auth-card, .connect-card, .loading-card { padding: 26px; }
   .auth-title { font-size: 2rem; }
 }
@@ -886,12 +888,13 @@ body.screen-stats-active .screen--stats {
   opacity: 1;
 }
 .share-apps-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  display: flex;
+  flex-wrap: wrap;
   gap: 12px;
 }
 
 .share-app-btn {
+  flex: 1 1 calc((100% - 36px) / 4);
   display: flex;
   flex-direction: column;
   align-items: center;
