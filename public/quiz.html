@@ -73,7 +73,7 @@
     .game-timer {
       position: absolute; top: 16px; right: 20px;
       font-family: var(--font-mono); font-size: 0.85rem; color: var(--accent);
-      background: rgba(250, 250, 250, 0.644); border: 1px solid rgba(200,255,77,0.2);
+      background: rgba(200,255,77,0.08); border: 1px solid rgba(200,255,77,0.2);
       border-radius: var(--radius-sm); padding: 6px 12px;
     }
     .game-progress { position: absolute; top: 16px; left: 50%; transform: translateX(-50%); font-family: var(--font-mono); font-size: 0.78rem; color: var(--muted); }
@@ -84,8 +84,9 @@
       background: var(--surface); border: 1px solid var(--line);
       border-radius: var(--radius-sm); padding: 14px 18px; cursor: pointer;
       text-align: center; transition: background 0.12s, border-color 0.12s, color 0.12s;
+      font-style: color white;
     }
-    .game-option:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); font-color: white; }
+    .game-option:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
     .game-option.correct { background: rgba(34,197,94,0.15); border-color: #22c55e; color: #22c55e; }
     .game-option.wrong { background: rgba(255,92,138,0.12); border-color: var(--accent-2); color: var(--accent-2); }
     .game-option:disabled { cursor: default; }
