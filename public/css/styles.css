@@ -46,7 +46,9 @@ html, body {
 }
 
 html { height: 100%; }
-body { height: 100vh; }
+body { height: 100vh;
+      height: 100dvh;
+}
 
 :focus-visible {
   outline: 2px solid var(--accent);
@@ -123,6 +125,7 @@ body.screen-stats-active {
 body.screen-stats-active .screen--stats {
   height: auto;
   min-height: 100vh;
+  min-height: 100dvh;
   overflow-y: visible;
 }
 
@@ -306,6 +309,22 @@ body.screen-stats-active .screen--stats {
 .btn--spotify:hover { background: #d8ffaa; }
 
 .spotify-icon { display: inline-flex; }
+
+@media (max-width: 600px), (max-height: 500px) {
+  .screen--stats { padding-bottom: 0; }
+
+  .playlist-action {
+    position: sticky;
+    bottom: 0;
+    z-index: 5;
+    margin: 20px -24px 0;
+    padding: 12px 24px calc(12px + env(safe-area-inset-bottom));
+    background: var(--bg);
+    border-top: 1px solid var(--line);
+  }
+
+  .btn--playlist { width: 100%; }
+}
 
 /* ----------------------------------------------------------
    Pantalla: Conectar
