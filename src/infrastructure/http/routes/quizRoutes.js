@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { getSession } from "../session.js";
+import { getSession } from "../../session.js";
 
 export const quizRoutes = new Hono();
 

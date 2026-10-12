@@ -1,6 +1,6 @@
 import { Hono } from "hono";
-import { D1UserRepository } from "../repositories/D1UserRepository.js";
-import { getSession } from "../session.js";
+import { D1UserRepository } from "../../repositories/D1UserRepository.js";
+import { getSession } from "../../session.js";
 
 export const avatarRoutes = new Hono();
 

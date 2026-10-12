@@ -1,7 +1,7 @@
 import { Hono } from "hono";
-import { SpotifyClient } from "../spotify/SpotifyClient.js";
-import { D1UserRepository } from "../repositories/D1UserRepository.js";
-import { getSession, saveSession, setSessionCookie } from "../session.js";
+import { SpotifyClient } from "../../spotify/SpotifyClient.js";
+import { D1UserRepository } from "../../repositories/D1UserRepository.js";
+import { getSession, saveSession, setSessionCookie } from "../../session.js";
 
 export const spotifyRoutes = new Hono();
 
@@ -79,8 +79,9 @@ spotifyRoutes.post("/playlist", async (c) => {
     await spotify.addTracksToPlaylist(accessToken, playlistId, matching.map(t => t.uri));
     return c.json({ success: true, playlistName: name, trackCount: matching.length });
   } catch (err) {
-    const status = err?.response?.data?.error?.status;
+    const status = err?.status || err?.response?.data?.error?.status;
     if (status === 403) return c.json({ success: false, error: "Spotify no permite crear playlists desde apps en modo desarrollo. Añade tu email en User Management del dashboard de Spotify." }, 400);
     return c.json({ success: false, error: "No se pudo crear la playlist." }, 400);
   }
 });
+

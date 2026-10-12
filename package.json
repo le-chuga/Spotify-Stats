@@ -1,20 +1,20 @@
 {
-  "name": "frecuencia",
+  "name": "spotify-stats",
   "version": "1.0.0",
-  "description": "Frecuencia - Spotify Stats en Cloudflare Workers",
-  "type": "module",
+  "description": "Login con SQLite + estadisticas reales de Spotify (Clean Architecture)",
+  "main": "src/index.js",
   "scripts": {
-    "dev": "wrangler dev",
-    "deploy": "wrangler deploy",
-    "db:create": "wrangler d1 create frecuencia-db",
-    "db:migrate": "wrangler d1 execute frecuencia-db --file=schema.sql",
-    "db:migrate:remote": "wrangler d1 execute frecuencia-db --remote --file=schema.sql",
-    "kv:create": "wrangler kv namespace create SESSIONS"
+    "start": "node src/index.js"
   },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
   "dependencies": {
-    "hono": "4.13.11"
-  },
-  "devDependencies": {
-    "wrangler": "^4.0.0"
+    "axios": "1.20.0",
+    "bcryptjs": "3.0.3",
+    "dotenv": "17.4.2",
+    "express": "5.2.1",
+    "express-session": "1.19.0",
+    "sql.js": "1.14.1"
   }
 }

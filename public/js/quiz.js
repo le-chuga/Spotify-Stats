@@ -36,19 +36,17 @@ async function loadSearchBackground() {
 
   // Recoger URLs de portadas de álbumes desde iTunes
   const albumUrls = [];
-  const shuffled = [...BACKGROUND_ARTISTS].sort(() => Math.random() - 0.5);
-
-  for (const name of shuffled) {
-    try {
-      const res = await fetch(
-        `https://itunes.apple.com/search?term=${encodeURIComponent(name)}&entity=song&limit=3`
-      );
-      const data = await res.json();
-      data.results
-        .filter((r) => r.wrapperType === "track" && r.artworkUrl100)
-        .forEach((r) => albumUrls.push(r.artworkUrl100.replace("100x100", "400x400")));
-    } catch { /* ignorar */ }
-  }
+  const shuffled = shuffle(BACKGROUND_ARTISTS).slice(0, 7);
+  const responses = await Promise.allSettled(shuffled.map((name) =>
+    fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(name)}&entity=song&limit=3`)
+      .then((res) => res.json())
+  ));
+  responses.forEach((response) => {
+    if (response.status !== "fulfilled") return;
+    (response.value.results || [])
+      .filter((r) => r.wrapperType === "track" && r.artworkUrl100)
+      .forEach((r) => albumUrls.push(r.artworkUrl100.replace("100x100", "400x400")));
+  });
 
   if (!albumUrls.length) return;
 
@@ -91,6 +89,7 @@ let searchTimeout = null;
 
 searchInput.addEventListener("input", () => {
   clearTimeout(searchTimeout);
+  document.getElementById("quiz-error").textContent = "";
   const q = searchInput.value.trim();
   if (q.length < 2) { searchResults.hidden = true; return; }
   searchTimeout = setTimeout(() => searchArtists(q), 350);
@@ -103,9 +102,20 @@ async function searchArtists(q) {
       `/api/deezer/artists?q=${encodeURIComponent(q)}`
     );
     const data = await res.json();
-    renderSearchResults(data.data || []);
+    const results = data.data || [];
+    if (!results.length) {
+      searchResults.replaceChildren();
+      const empty = document.createElement("p");
+      empty.className = "search-empty";
+      empty.textContent = "No encontramos artistas con ese nombre.";
+      searchResults.appendChild(empty);
+      searchResults.hidden = false;
+      return;
+    }
+    renderSearchResults(results);
   } catch {
     searchResults.hidden = true;
+    document.getElementById("quiz-error").textContent = "No se pudo buscar ahora. Prueba de nuevo en un momento.";
   }
 }
 
@@ -137,6 +147,7 @@ document.addEventListener("click", (e) => {
 });
 
 async function selectArtist(deezerArtist) {
+  document.getElementById("quiz-error").textContent = "";
   searchResults.hidden = true;
   searchInput.value = deezerArtist.name;
 
@@ -170,9 +181,14 @@ async function selectArtist(deezerArtist) {
 // ═══════════════════════════════════════════════════════
 document.getElementById("btn-start-quiz").addEventListener("click", async () => {
   document.getElementById("quiz-artist-modal").hidden = true;
-  const tracks = await fetchArtistTracks();
+  let tracks;
+  try {
+    tracks = await fetchArtistTracks();
+  } catch {
+    tracks = [];
+  }
   if (tracks.length < 4) {
-    alert("No se encontraron suficientes canciones con preview. Prueba con otro artista.");
+    document.getElementById("quiz-error").textContent = "No encontramos suficientes fragmentos para este artista. Prueba con otro.";
     document.getElementById("quiz-artist-modal").hidden = false;
     return;
   }
@@ -277,7 +293,6 @@ function showQuestion(index) {
   options.forEach((opt) => {
     const btn = document.createElement("button");
     btn.className = "game-option";
-    btn.style.color = "#fff";
     btn.textContent = opt;
     btn.addEventListener("click", () =>
       handleAnswer(btn, opt, track.trackName, container)
@@ -343,9 +358,11 @@ function showLeaderboard(leaderboard) {
 
   if (!leaderboard.length) {
     const tr = document.createElement("tr");
-    tr.innerHTML = `<td colspan="3" style="color:var(--muted);text-align:center;padding:20px;">
-      Sé el primero en el leaderboard con 10/10
-    </td>`;
+    const td = document.createElement("td");
+    td.colSpan = 3;
+    td.className = "leaderboard-empty";
+    td.textContent = "Sé el primero en la clasificación con 10/10";
+    tr.appendChild(td);
     tbody.appendChild(tr);
   } else {
     leaderboard.forEach((row, i) => {
@@ -354,11 +371,14 @@ function showLeaderboard(leaderboard) {
       else if (i === 1) tr.className = "lb-rank-2";
       else if (i === 2) tr.className = "lb-rank-3";
       const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `${i + 1}`;
-      tr.innerHTML = `
-        <td>${medal}</td>
-        <td>${row.account_id}</td>
-        <td class="lb-time-cell">${formatTime(row.best_time)}</td>
-      `;
+      const rank = document.createElement("td");
+      const account = document.createElement("td");
+      const time = document.createElement("td");
+      rank.textContent = medal;
+      account.textContent = row.account_id || "Usuario";
+      time.className = "lb-time-cell";
+      time.textContent = formatTime(row.best_time);
+      tr.append(rank, account, time);
       tbody.appendChild(tr);
     });
   }

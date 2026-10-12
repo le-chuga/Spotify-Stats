@@ -20,8 +20,8 @@ export function showScreen(name) {
   Object.entries(screens).forEach(([key, el]) => {
     el.hidden = key !== name;
   });
-  // La pantalla de stats puede necesitar más altura que el viewport:
-  // activamos scroll de página solo para ella.
+  document.body.classList.toggle("screen-auth-active", name === "auth");
+  document.body.classList.toggle("screen-connect-active", name === "connect");
   document.body.classList.toggle("screen-stats-active", name === "stats");
 }
 
@@ -150,6 +150,9 @@ const statsEls = {
   error: document.getElementById("stats-error"),
   displayName: document.getElementById("stats-display-name"),
   meta: document.getElementById("profile-meta"),
+  featuredTrack: document.getElementById("featured-track"),
+  featuredArtist: document.getElementById("featured-artist"),
+  featuredArt: document.getElementById("featured-art"),
   topTracks: document.getElementById("list-top-tracks"),
   topArtists: document.getElementById("list-top-artists"),
   recent: document.getElementById("list-recent"),
@@ -207,7 +210,22 @@ export function renderSpotifyStats(stats) {
 
   if (stats.profile) {
     statsEls.displayName.textContent = stats.profile.displayName || "Tu perfil";
-    statsEls.meta.textContent = `${stats.profile.followers} seguidores`;
+    statsEls.meta.textContent = `${stats.profile.followers ?? 0} seguidores · conectado a Spotify`;
+  }
+
+  const featured = stats.topTracks?.[0];
+  if (featured) {
+    statsEls.featuredTrack.textContent = featured.name || "Tu canción más escuchada";
+    statsEls.featuredArtist.textContent = featured.artist || "Entre tus favoritas";
+    if (featured.imageUrl) {
+      statsEls.featuredArt.style.backgroundImage = `url("${featured.imageUrl}")`;
+      statsEls.featuredArt.classList.add("has-image");
+    }
+  } else {
+    statsEls.featuredTrack.textContent = "Tu banda sonora, al descubierto.";
+    statsEls.featuredArtist.textContent = "Aún no hay canciones para mostrar.";
+    statsEls.featuredArt.style.backgroundImage = "";
+    statsEls.featuredArt.classList.remove("has-image");
   }
 
   renderList(statsEls.topTracks, stats.topTracks, (t) =>
@@ -232,6 +250,7 @@ export function renderSpotifyStats(stats) {
 }
 
 const modalEls = {
+  playlistSection: document.getElementById("playlist-action-section"),
   overlay: document.getElementById("playlist-modal-overlay"),
   artistList: document.getElementById("artist-select-list"),
   titleInput: document.getElementById("playlist-title-input"),
@@ -246,6 +265,7 @@ const modalEls = {
 };
 
 export function showPlaylistButton(artists) {
+  modalEls.playlistSection.hidden = false;
   modalEls.btnOpen.hidden = false;
   modalEls.btnOpen._artists = artists;
 }

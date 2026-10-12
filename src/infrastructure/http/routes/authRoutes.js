@@ -1,7 +1,7 @@
 import { Hono } from "hono";
-import { hashPassword, verifyPassword } from "../password.js";
-import { D1UserRepository } from "../repositories/D1UserRepository.js";
-import { getSession, saveSession, destroySession, setSessionCookie, clearSessionCookie } from "../session.js";
+import { hashPassword, verifyPassword } from "../../password.js";
+import { D1UserRepository } from "../../repositories/D1UserRepository.js";
+import { getSession, saveSession, destroySession, setSessionCookie, clearSessionCookie } from "../../session.js";
 
 export const authRoutes = new Hono();
 
