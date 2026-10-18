@@ -162,8 +162,70 @@ async function loadStats() {
    6) Modal de crear playlist
    ---------------------------------------------------------- */
 document.getElementById("btn-open-playlist-modal").addEventListener("click", () => {
+  cancelArtistSearch();
   ui.resetPlaylistModal();
   ui.openPlaylistModal();
+});
+
+/* Buscador de artistas del modal.
+   - Espera 300 ms tras la última tecla (o Enter) antes de preguntar a Spotify.
+   - Cada búsqueda lleva un número: si llega una respuesta vieja, se ignora. */
+const ARTIST_SEARCH_DELAY_MS = 300;
+const ARTIST_SEARCH_MIN_CHARS = 2;
+let artistSearchTimer = null;
+let artistSearchSeq = 0;
+
+function cancelArtistSearch() {
+  clearTimeout(artistSearchTimer);
+  artistSearchSeq++;
+}
+
+async function runArtistSearch(query) {
+  const mine = ++artistSearchSeq;
+  ui.showArtistSearch({ status: "loading", query });
+  try {
+    const { ok, data } = await api.searchArtists(query);
+    if (mine !== artistSearchSeq) return;
+    if (!ok) {
+      ui.showArtistSearch({ status: "error", message: data.error || "No se pudo buscar en Spotify." });
+    } else if (!data.artists?.length) {
+      ui.showArtistSearch({ status: "empty", query });
+    } else {
+      ui.showArtistSearch({ status: "results", query, artists: data.artists });
+    }
+  } catch (err) {
+    if (mine !== artistSearchSeq) return;
+    ui.showArtistSearch({ status: "error", message: "Error de red: " + err.message });
+  }
+}
+
+ui.modal.search.addEventListener("input", () => {
+  const raw = ui.modal.search.value;
+  const query = raw.trim();
+  ui.modal.searchClear.hidden = raw.length === 0;
+  cancelArtistSearch();
+  if (query.length < ARTIST_SEARCH_MIN_CHARS) {
+    ui.showArtistSearch({ status: "idle" });
+    return;
+  }
+  artistSearchTimer = setTimeout(() => runArtistSearch(query), ARTIST_SEARCH_DELAY_MS);
+});
+
+ui.modal.search.addEventListener("keydown", (e) => {
+  if (e.key !== "Enter") return;
+  e.preventDefault();
+  const query = ui.modal.search.value.trim();
+  if (!query) return;
+  cancelArtistSearch();
+  runArtistSearch(query);
+});
+
+ui.modal.searchClear.addEventListener("click", () => {
+  cancelArtistSearch();
+  ui.modal.search.value = "";
+  ui.modal.searchClear.hidden = true;
+  ui.showArtistSearch({ status: "idle" });
+  ui.modal.search.focus();
 });
 
 document.getElementById("btn-cancel-playlist").addEventListener("click", () => {
@@ -207,9 +269,12 @@ document.getElementById("btn-confirm-playlist").addEventListener("click", async 
       return;
     }
 
-    ui.showPlaylistModalSuccess(
-      `Playlist "${data.playlistName}" creada con ${data.trackCount} canciones.`
-    );
+    const n = data.trackCount;
+    let message = `Playlist "${data.playlistName}" creada con ${n} ${n === 1 ? "canción" : "canciones"}.`;
+    if (data.missingArtists?.length) {
+      message += ` Sin canciones tuyas de: ${data.missingArtists.join(", ")}.`;
+    }
+    ui.showPlaylistModalSuccess(message);
   } catch (err) {
     ui.showPlaylistModalError("Error de red: " + err.message);
     btn.disabled = false;

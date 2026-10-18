@@ -183,10 +183,21 @@
       <div id="modal-view-select" class="sheet-view">
         <div>
           <h2 id="playlist-modal-title" class="sheet-title">Crear playlist de…</h2>
-          <p class="muted">Elige uno o varios artistas. Buscaremos sus canciones en tus “Canciones que te gustan” y crearemos una playlist nueva con ellas.</p>
+          <p class="muted">Elige artistas de tu lista o búscalos por nombre. Buscaremos sus canciones en tus “Canciones que te gustan” y crearemos una playlist nueva con ellas.</p>
         </div>
 
-        <ul class="artist-pick" id="artist-select-list"></ul>
+        <ul class="chips" id="artist-chips" aria-label="Artistas elegidos" hidden></ul>
+
+        <div class="search-input-wrap search-input-wrap--inline">
+          <svg class="icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M229.66,218.34l-50.07-50.06a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z"/></svg>
+          <input type="text" id="artist-pick-search" inputmode="search" placeholder="Busca cualquier artista…" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="search" aria-label="Buscar artista" aria-controls="artist-select-list" />
+          <button type="button" id="artist-pick-clear" class="search-clear" aria-label="Borrar búsqueda" hidden><svg class="icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M205.66,194.34a8,8,0,0,1-11.32,11.32L128,139.31,61.66,205.66a8,8,0,0,1-11.32-11.32L116.69,128,50.34,61.66A8,8,0,0,1,61.66,50.34L128,116.69l66.34-66.35a8,8,0,0,1,11.32,11.32L139.31,128Z"/></svg></button>
+        </div>
+
+        <div>
+          <p class="pick-heading" id="artist-pick-heading" role="status">Tus artistas más escuchados</p>
+          <ul class="artist-pick" id="artist-select-list"></ul>
+        </div>
 
         <div class="field">
           <label for="playlist-title-input">Título de la playlist</label>

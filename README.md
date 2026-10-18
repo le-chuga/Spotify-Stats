@@ -94,6 +94,17 @@ schema.sql                           # Schema de D1
 wrangler.toml                        # Config de Cloudflare
 ```
 
+## Crear playlist de artistas
+
+El botón **Crear playlist de…** de la pantalla de estadísticas permite elegir artistas de tu lista
+de más escuchados o **buscarlos por nombre** (Spotify devuelve hasta 10 resultados por búsqueda; la
+selección se conserva entre búsquedas y se ve como chips). La playlist se arma con las canciones de
+esos artistas que ya tienes en "Canciones que te gustan"; si de alguno no hay ninguna, la app lo
+indica al terminar.
+
+- `GET /api/spotify/search/artists?q=…` → busca artistas en Spotify.
+- `POST /api/spotify/playlist` → crea la playlist; responde también con `missingArtists`.
+
 ## Canciones en común
 
 Menú ☰ → **Canciones en común**. Se pegan los enlaces de 2 a 6 playlists (también acepta
