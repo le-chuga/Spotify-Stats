@@ -6,6 +6,7 @@
  */
 import { api } from "./api.js";
 import * as ui from "./ui.js";
+import { openCommonModal } from "./common.js";
 
 /* ----------------------------------------------------------
    1) Comprobar al cargar si ya hay sesión / Spotify vinculado
@@ -207,7 +208,7 @@ document.getElementById("btn-confirm-playlist").addEventListener("click", async 
     }
 
     ui.showPlaylistModalSuccess(
-      `Playlist "${data.playlistName}" creada con ${data.trackCount} canciones 🎵`
+      `Playlist "${data.playlistName}" creada con ${data.trackCount} canciones.`
     );
   } catch (err) {
     ui.showPlaylistModalError("Error de red: " + err.message);
@@ -321,7 +322,7 @@ async function openShareModal() {
     text: shareUrl,
     width: 180,
     height: 180,
-    colorDark: "#0B0D10",
+    colorDark: "#1B1340",
     colorLight: "#ffffff",
   });
 
@@ -393,6 +394,11 @@ document.getElementById("btn-quizzes-panel").addEventListener("click", () => {
 });
 
 document.getElementById("btn-share-panel").addEventListener("click", openShareModal);
+
+document.getElementById("btn-common-panel").addEventListener("click", () => {
+  closePanel("side-panel", "side-panel-overlay");
+  openCommonModal();
+});
 
 document.getElementById("btn-close-share-modal").addEventListener("click", () => {
   document.getElementById("share-modal-overlay").hidden = true;

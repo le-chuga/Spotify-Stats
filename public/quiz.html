@@ -2,83 +2,95 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#11140f" />
-  <meta name="description" content="Pon a prueba tu oído y reconoce canciones de tus artistas favoritos." />
-  <meta property="og:title" content="Frecuencia · Adivina la canción" />
-  <meta property="og:description" content="Pon a prueba tu oído con tus artistas favoritos." />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content" />
+  <meta name="color-scheme" content="light dark" />
+  <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f7f6fb" />
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#14102b" />
+  <title>Frecuencia: adivina la canción</title>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-  <title>Frecuencia · Adivina la canción</title>
+  <link rel="preload" href="/fonts/unbounded-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href="/fonts/instrument-sans-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="stylesheet" href="/css/styles.css" />
 </head>
 <body>
+  <a class="back-link" id="btn-back-quiz" href="/"><svg class="icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M165.66,202.34a8,8,0,0,1-11.32,11.32l-80-80a8,8,0,0,1,0-11.32l80-80a8,8,0,0,1,11.32,11.32L91.31,128Z"/></svg> Volver</a>
 
-  <!-- BOTÓN VOLVER -->
-  <button class="btn btn--ghost btn-back-quiz" id="btn-back-quiz" onclick="location.href='/'">← Volver</button>
-
-  <!-- ════════ PANTALLA 1: BÚSQUEDA ════════ -->
+  <!-- ============ Buscar artista ============ -->
   <main class="quiz-screen" id="screen-search">
-    <div class="search-bg" id="search-bg"></div>
+    <div class="search-bg" id="search-bg" aria-hidden="true"></div>
+
     <div class="search-content">
-      <p class="eyebrow">El juego de las canciones</p>
-      <h1 class="search-title">¿De qué artista?</h1>
-      <p class="search-sub">Busca un artista o grupo. Sonarán 10 canciones suyas, ¡adivínalas lo antes posible!</p>
+      <p class="quiz-name">Guess the Song</p>
+      <h1 class="quiz-title">¿De qué artista?</h1>
+      <p class="muted">Busca un artista o grupo. Sonarán 10 canciones suyas: adivínalas lo antes posible.</p>
+
       <div class="search-input-wrap">
-        <label class="sr-only" for="artist-search-input">Busca un artista o grupo</label>
-        <input type="text" id="artist-search-input" placeholder="Ej: Mac Miller, Carolina Durante…" autocomplete="off" />
+        <svg class="icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M229.66,218.34l-50.07-50.06a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z"/></svg>
+        <input type="text" id="artist-search-input" placeholder="Ej: Mac Miller, Carolina Durante…" autocomplete="off" autocapitalize="none" spellcheck="false" enterkeyhint="search" aria-label="Buscar artista" />
         <div class="search-results" id="search-results" hidden></div>
       </div>
-      <p class="quiz-error" id="quiz-error" role="alert" aria-live="polite"></p>
     </div>
   </main>
 
-  <!-- MODAL: artista seleccionado → Start -->
-  <div id="quiz-artist-modal" hidden>
-    <div class="quiz-modal-card">
-      <img id="modal-artist-img" class="quiz-artist-img" alt="" />
-      <p class="quiz-artist-name" id="modal-artist-name"></p>
-      <p class="quiz-artist-meta" id="modal-artist-meta"></p>
-      <button class="btn btn--primary quiz-start-button" id="btn-start-quiz">
-        Start
-      </button>
+  <!-- Artista elegido -->
+  <div id="quiz-artist-modal" class="modal" hidden>
+    <div class="sheet sheet--center" role="dialog" aria-modal="true" aria-labelledby="modal-artist-name">
+      <img id="modal-artist-img" class="artist-photo" alt="" />
+      <div>
+        <h2 id="modal-artist-name" class="sheet-title"></h2>
+        <p id="modal-artist-meta" class="muted"></p>
+      </div>
+      <p id="modal-artist-error" class="form-error" role="alert"></p>
+      <button class="btn btn--primary btn--lg btn--block" id="btn-start-quiz">Start</button>
+      <button class="btn btn--text" id="btn-cancel-artist">Elegir otro artista</button>
     </div>
   </div>
 
-  <!-- ════════ PANTALLA 2: CUENTA ATRÁS ════════ -->
+  <!-- ============ Cuenta atrás ============ -->
   <main class="quiz-screen" id="screen-countdown" hidden>
-    <div class="countdown-bg"></div>
-    <p class="countdown-number" id="countdown-number">3</p>
+    <p class="countdown-number" id="countdown-number" role="timer" aria-live="polite">3</p>
   </main>
 
-  <!-- ════════ PANTALLA 3: JUEGO ════════ -->
+  <!-- ============ Juego ============ -->
   <main class="quiz-screen" id="screen-game" hidden>
-    <div class="game-timer" id="game-timer">00:00:000</div>
-    <p class="game-progress" id="game-progress">1 / 10</p>
-    <img id="game-album-img" class="game-album-img" alt="" />
-    <div class="game-options" id="game-options"></div>
+    <header class="hud">
+      <p class="hud-progress" id="game-progress">1 / 10</p>
+      <p class="hud-timer" id="game-timer">00:00:000</p>
+    </header>
+
+    <div class="stage">
+      <img id="game-album-img" class="album" alt="Portada del álbum de la canción que suena" />
+      <div class="options" id="game-options"></div>
+    </div>
   </main>
 
-  <!-- ════════ PANTALLA 4: LEADERBOARD ════════ -->
+  <!-- ============ Resultado y ranking ============ -->
   <main class="quiz-screen" id="screen-leaderboard" hidden>
-    <div class="lb-header">
-      <p class="eyebrow">Resultado</p>
-      <h2 id="lb-artist-title"></h2>
-      <div class="lb-result-box" id="lb-my-result">
+    <div class="lb">
+      <div>
+        <p class="quiz-name">Resultado</p>
+        <h2 class="quiz-title quiz-title--sm" id="lb-artist-title"></h2>
+      </div>
+
+      <div class="lb-result" id="lb-my-result">
         <p class="lb-result-time" id="lb-my-time">—</p>
         <p class="lb-result-sub" id="lb-my-sub"></p>
       </div>
-      <h3 class="leaderboard-heading">Top global</h3>
-      <table class="lb-table" id="lb-table">
-        <thead><tr><th>#</th><th>Usuario</th><th>Tiempo</th></tr></thead>
-        <tbody id="lb-body"></tbody>
-      </table>
-      <button class="btn btn--ghost quiz-play-again" id="btn-play-again">Jugar de nuevo</button>
+
+      <div>
+        <h3 class="block-title">Top global</h3>
+        <table class="lb-table" id="lb-table">
+          <thead>
+            <tr><th scope="col">#</th><th scope="col">Usuario</th><th scope="col" class="num">Tiempo</th></tr>
+          </thead>
+          <tbody id="lb-body"></tbody>
+        </table>
+      </div>
+
+      <button class="btn btn--outline btn--block" id="btn-play-again">Jugar de nuevo</button>
     </div>
   </main>
 
   <script src="/js/quiz.js" defer></script>
 </body>
 </html>
-
-
-

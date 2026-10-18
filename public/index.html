@@ -2,355 +2,209 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#10130f" />
-  <meta name="description" content="Una mirada personal a lo que escuchas: canciones, artistas y descubrimientos recientes." />
-  <meta property="og:title" content="Frecuencia · Tu música, en perspectiva" />
-  <meta property="og:description" content="Vuelve a tus canciones favoritas y descubre lo que está sonando últimamente." />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content" />
+  <meta name="color-scheme" content="light dark" />
+  <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f7f6fb" />
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#14102b" />
+  <meta name="description" content="Frecuencia: tus canciones y artistas más escuchados de Spotify, un quiz para adivinar canciones y enlaces para compartir tus estadísticas." />
+  <title>Frecuencia: tus estadísticas de escucha</title>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-  <title>Frecuencia · Tus estadísticas de escucha</title>
+  <link rel="preload" href="/fonts/unbounded-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href="/fonts/instrument-sans-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="stylesheet" href="/css/styles.css" />
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
 </head>
-<body class="screen-auth-active">
+<body>
+  <noscript>Frecuencia necesita JavaScript para funcionar. Actívalo en tu navegador y recarga la página.</noscript>
 
-  <!-- Fondo de ondas decorativo (ecualizador ambiental) -->
-  <div class="eq-background" aria-hidden="true">
-    <div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div>
-    <div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div>
-    <div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div>
-    <div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div>
-    <div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div>
-    <div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div>
-    <div class="eq-bar"></div><div class="eq-bar"></div>
-  </div>
+  <!-- ============ Iniciar sesión / crear cuenta ============ -->
+  <main id="screen-auth" class="screen split" data-screen="auth">
+    <section class="brand">
+      <h1 class="wordmark">Frecuencia</h1>
+      <p class="tagline">Tus canciones y artistas más escuchados, con los datos reales de tu cuenta de Spotify.</p>
+    </section>
 
-  <div class="ambient-orb ambient-orb--one" aria-hidden="true"></div>
-  <div class="ambient-orb ambient-orb--two" aria-hidden="true"></div>
+    <section class="panel">
+      <div class="panel-inner">
+        <form id="form-login" class="auth-form" novalidate>
+          <div>
+            <h2 class="panel-title">Inicia sesión</h2>
+            <p class="panel-lead">Entra con tu Id de cuenta y tu contraseña.</p>
+          </div>
 
-  <!-- ============ PANTALLA 1: LOGIN / REGISTRO ============ -->
-  <main id="screen-auth" class="screen screen--auth" data-screen="auth">
-    <div class="auth-layout">
-      <section class="auth-intro" aria-labelledby="auth-heading">
-        <a class="brand-lockup" href="/" aria-label="Frecuencia, inicio">
-          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
-          <span>frecuencia</span>
-        </a>
-        <p class="eyebrow">Tu música, vista de cerca</p>
-        <h1 id="auth-heading">Cada escucha<br />deja una <em>huella.</em></h1>
-        <p class="auth-intro-copy">Vuelve a tus canciones favoritas, descubre tus artistas de siempre y mira qué está sonando últimamente.</p>
-        <div class="auth-note-line"><span class="signal-dot"></span> Tus datos. Tu ritmo.</div>
-      </section>
+          <div class="field">
+            <label for="login-id">Id de cuenta</label>
+            <input type="text" id="login-id" name="accountId" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="next" placeholder="tu_id_de_usuario" />
+            <p class="field-error" id="error-login-id" role="alert"></p>
+          </div>
 
-      <div class="auth-card">
-      <p class="eyebrow">Tu espacio de escucha</p>
-      <h2 class="auth-title">Qué bueno verte.</h2>
-      <p class="auth-subtitle">Entra para abrir tu resumen musical.</p>
+          <div class="field">
+            <label for="login-password">Contraseña</label>
+            <input type="password" id="login-password" name="password" autocomplete="current-password" enterkeyhint="go" placeholder="••••••••" />
+            <p class="field-error" id="error-login-password" role="alert"></p>
+          </div>
 
-      <form id="form-login" class="auth-form" novalidate>
-        <div class="field">
-          <label for="login-id">ID de cuenta</label>
-          <input type="text" id="login-id" name="accountId" autocomplete="username" placeholder="Tu nombre de usuario" />
-          <p class="field-error" id="error-login-id" role="alert"></p>
-        </div>
+          <p class="form-error" id="form-error-login" role="alert"></p>
+          <p class="form-success" id="form-success-login" role="status"></p>
 
-        <div class="field">
-          <label for="login-password">Contraseña</label>
-          <input type="password" id="login-password" name="password" autocomplete="current-password" placeholder="••••••••" />
-          <p class="field-error" id="error-login-password" role="alert"></p>
-        </div>
+          <div class="auth-actions">
+            <button type="submit" class="btn btn--primary">Entrar</button>
+            <button type="button" id="btn-show-register" class="btn btn--outline">Crear cuenta</button>
+          </div>
+        </form>
 
-        <p class="form-error" id="form-error-login" role="alert"></p>
-        <p class="form-success" id="form-success-login" role="status"></p>
+        <form id="form-register" class="auth-form auth-form--hidden" novalidate>
+          <div>
+            <h2 class="panel-title">Crea tu cuenta</h2>
+            <p class="panel-lead">Elige un Id de cuenta y una contraseña. Los usarás cada vez que entres.</p>
+          </div>
 
-        <div class="auth-actions">
-          <button type="submit" class="btn btn--primary">Entrar</button>
-          <button type="button" id="btn-show-register" class="btn btn--ghost">Crear cuenta</button>
-        </div>
-      </form>
+          <div class="field">
+            <label for="register-id">Elige un Id de cuenta</label>
+            <input type="text" id="register-id" name="accountId" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="next" placeholder="mínimo 3 caracteres" />
+            <p class="field-error" id="error-register-id" role="alert"></p>
+          </div>
 
-      <!-- Formulario de registro, oculto hasta que se pulsa "Crear cuenta" -->
-      <form id="form-register" class="auth-form auth-form--hidden" novalidate>
-        <p class="eyebrow">Nueva cuenta</p>
+          <div class="field">
+            <label for="register-password">Elige una contraseña</label>
+            <input type="password" id="register-password" name="password" autocomplete="new-password" enterkeyhint="go" placeholder="mínimo 4 caracteres" />
+            <p class="field-error" id="error-register-password" role="alert"></p>
+          </div>
 
-        <div class="field">
-          <label for="register-id">Elige un ID de cuenta</label>
-          <input type="text" id="register-id" name="accountId" autocomplete="username" placeholder="mínimo 3 caracteres" />
-          <p class="field-error" id="error-register-id" role="alert"></p>
-        </div>
+          <p class="form-error" id="form-error-register" role="alert"></p>
+          <p class="form-success" id="form-success-register" role="status"></p>
 
-        <div class="field">
-          <label for="register-password">Elige una contraseña</label>
-          <input type="password" id="register-password" name="password" autocomplete="new-password" placeholder="mínimo 4 caracteres" />
-          <p class="field-error" id="error-register-password" role="alert"></p>
-        </div>
+          <div class="auth-actions">
+            <button type="submit" class="btn btn--primary">Crear cuenta</button>
+            <button type="button" id="btn-back-to-login" class="btn btn--outline">Volver</button>
+          </div>
+        </form>
 
-        <p class="form-error" id="form-error-register" role="alert"></p>
-        <p class="form-success" id="form-success-register" role="status"></p>
-
-        <div class="auth-actions">
-          <button type="submit" class="btn btn--primary">Crear cuenta</button>
-          <button type="button" id="btn-back-to-login" class="btn btn--ghost">Volver</button>
-        </div>
-      </form>
-
-      <p class="auth-note" id="spotify-link-error" role="alert"></p>
-      <p class="auth-privacy">Tu acceso es independiente de Spotify. La conexión musical se autoriza después.</p>
+        <p class="auth-note" id="spotify-link-error" role="alert"></p>
       </div>
-    </div>
+    </section>
   </main>
 
-  <!-- ============ PANTALLA 2: CONECTAR SPOTIFY ============ -->
-  <main id="screen-connect" class="screen screen--connect" data-screen="connect" hidden>
-    <div class="connect-card">
-      <div class="connect-record" aria-hidden="true"><span></span></div>
-      <p class="eyebrow">Siguiente paso</p>
-      <h2 class="connect-title">Conecta tu cuenta de música</h2>
-      <p class="connect-subtitle">
-        Vincula tu cuenta para que podamos leer tus estadísticas reales de escucha:
-        tus canciones más repetidas, artistas favoritos y lo último que has escuchado.
-      </p>
+  <!-- ============ Conectar Spotify ============ -->
+  <main id="screen-connect" class="screen split" data-screen="connect" hidden>
+    <section class="brand">
+      <p class="wordmark">Frecuencia</p>
+      <p class="tagline">Un último paso: vincula tu Spotify y verás tus estadísticas.</p>
+    </section>
 
-      <a href="/api/spotify/login" id="btn-connect-spotify" class="btn btn--spotify">
-        <span class="spotify-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
-            <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm4.586 14.424a.624.624 0 0 1-.857.207c-2.348-1.435-5.304-1.76-8.785-.964a.624.624 0 0 1-.277-1.217c3.809-.871 7.077-.496 9.712 1.115a.625.625 0 0 1 .207.86Zm1.223-2.722a.78.78 0 0 1-1.072.258c-2.687-1.652-6.785-2.131-9.965-1.166a.781.781 0 0 1-.454-1.494c3.633-1.102 8.147-.568 11.234 1.328a.78.78 0 0 1 .257 1.074Zm.105-2.835C14.692 9.027 9.375 8.85 6.297 9.79a.937.937 0 1 1-.545-1.793c3.533-1.072 9.404-.865 13.115 1.343a.938.938 0 0 1-.953 1.617Z"/>
-          </svg>
-        </span>
-        Conectar con Spotify
-      </a>
+    <section class="panel">
+      <div class="panel-inner">
+        <h2 class="panel-title">Conecta tu cuenta de Spotify</h2>
+        <p class="panel-lead">Leeremos tus canciones más repetidas, tus artistas favoritos y lo último que has escuchado.</p>
 
-      <button id="btn-skip-connect" class="btn btn--ghost">Continuar sin conectar</button>
-      <button id="btn-logout-connect" class="btn btn--text">Cerrar sesión</button>
-    </div>
-  </main>
-
-  <!-- ============ PANTALLA 3: CARGANDO ============ -->
-  <main id="screen-loading" class="screen screen--loading" data-screen="loading" hidden>
-    <div class="loading-card">
-      <div class="loading-spinner" aria-hidden="true">
-        <span></span><span></span><span></span><span></span>
+        <div class="stack">
+          <a href="/api/spotify/login" id="btn-connect-spotify" class="btn btn--primary btn--lg btn--block">
+            <svg class="icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm31.07,145.74a8,8,0,0,1-10.81,3.33,42.79,42.79,0,0,0-40.52,0,8,8,0,0,1-7.48-14.14,59.33,59.33,0,0,1,55.48,0A8,8,0,0,1,159.07,169.74Zm16-28a8,8,0,0,1-10.82,3.3,77.07,77.07,0,0,0-72.48,0,8,8,0,0,1-7.52-14.12,93,93,0,0,1,87.52,0A8,8,0,0,1,175.06,141.76Zm16-28a8,8,0,0,1-10.83,3.29,110.62,110.62,0,0,0-104.46,0,8,8,0,0,1-7.54-14.12,126.67,126.67,0,0,1,119.54,0A8,8,0,0,1,191.06,113.76Z"/></svg> Conectar con Spotify
+          </a>
+          <button id="btn-skip-connect" class="btn btn--outline btn--block">Continuar sin conectar</button>
+          <button id="btn-logout-connect" class="btn btn--text">Cerrar sesión</button>
+        </div>
       </div>
-      <p class="loading-text">Cargando, por favor espere unos segundos…</p>
-    </div>
+    </section>
   </main>
 
-  <!-- ============ PANTALLA 4: ESTADÍSTICAS ============ -->
+  <!-- ============ Cargando ============ -->
+  <main id="screen-loading" class="screen centered" data-screen="loading" hidden>
+    <div class="record" aria-hidden="true"></div>
+    <p class="loading-text" role="status">Cargando, por favor espere unos segundos…</p>
+  </main>
+
+  <!-- ============ Estadísticas ============ -->
   <main id="screen-stats" class="screen screen--stats" data-screen="stats" hidden>
-    <header class="stats-header">
-      <div class="stats-header-left">
-        <button type="button" class="avatar-wrapper" id="avatar-wrapper" title="Cambiar foto de perfil" aria-label="Cambiar foto de perfil">
-          <div class="avatar-circle" id="avatar-circle">
-            <svg class="avatar-placeholder" id="avatar-placeholder" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <line x1="28" y1="16" x2="28" y2="40" stroke="#9CA3AF" stroke-width="3" stroke-linecap="round"/>
-              <line x1="16" y1="28" x2="40" y2="28" stroke="#9CA3AF" stroke-width="3" stroke-linecap="round"/>
-            </svg>
-            <img class="avatar-img" id="avatar-img" alt="Foto de perfil" hidden />
-          </div>
-          <div class="avatar-overlay" aria-hidden="true">
-            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="white" stroke-width="2">
-              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-              <circle cx="12" cy="13" r="4"/>
-            </svg>
-          </div>
+    <header class="topbar">
+      <div class="identity">
+        <button type="button" class="avatar-wrapper" id="avatar-wrapper" aria-label="Cambiar foto de perfil" title="Cambiar foto de perfil">
+          <span class="avatar-circle" id="avatar-circle">
+            <span id="avatar-placeholder" class="avatar-placeholder"><svg class="icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M224,128a8,8,0,0,1-8,8H136v80a8,8,0,0,1-16,0V136H40a8,8,0,0,1,0-16h80V40a8,8,0,0,1,16,0v80h80A8,8,0,0,1,224,128Z"/></svg></span>
+            <img class="avatar-img" id="avatar-img" alt="Tu foto de perfil" hidden />
+          </span>
+          <span class="avatar-overlay" aria-hidden="true"><svg class="icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M208,56H180.28L166.65,35.56A8,8,0,0,0,160,32H96a8,8,0,0,0-6.65,3.56L75.71,56H48A24,24,0,0,0,24,80V192a24,24,0,0,0,24,24H208a24,24,0,0,0,24-24V80A24,24,0,0,0,208,56Zm8,136a8,8,0,0,1-8,8H48a8,8,0,0,1-8-8V80a8,8,0,0,1,8-8H80a8,8,0,0,0,6.66-3.56L100.28,48h55.43l13.63,20.44A8,8,0,0,0,176,72h32a8,8,0,0,1,8,8ZM128,88a44,44,0,1,0,44,44A44.05,44.05,0,0,0,128,88Zm0,72a28,28,0,1,1,28-28A28,28,0,0,1,128,160Z"/></svg></span>
         </button>
-        <input type="file" id="avatar-input" accept="image/*" class="sr-only avatar-file-input" tabindex="-1" aria-label="Elegir foto de perfil" />
-        <div>
-          <p class="eyebrow" id="stats-eyebrow">Estadísticas de escucha</p>
-          <h2 class="stats-title" id="stats-display-name">—</h2>
-          <p class="profile-meta" id="profile-meta"></p>
+        <input type="file" id="avatar-input" accept="image/*" />
+
+        <div class="identity-text">
+          <p class="kicker">Estadísticas de escucha</p>
+          <h1 class="display-name" id="stats-display-name">—</h1>
+          <p class="followers" id="profile-meta"></p>
         </div>
       </div>
-      <button id="btn-menu" class="btn-hamburger" aria-label="Menú" title="Menú">
-        <span></span><span></span><span></span>
-      </button>
+
+      <button id="btn-menu" class="icon-btn" aria-label="Abrir menú" aria-haspopup="dialog"><svg class="icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M224,128a8,8,0,0,1-8,8H40a8,8,0,0,1,0-16H216A8,8,0,0,1,224,128ZM40,72H216a8,8,0,0,0,0-16H40a8,8,0,0,0,0,16ZM216,184H40a8,8,0,0,0,0,16H216a8,8,0,0,0,0-16Z"/></svg></button>
     </header>
 
     <p class="stats-error" id="stats-error" role="alert" hidden></p>
 
-        <section class="listening-feature" aria-label="Tu canción más escuchada">
-          <div class="listening-feature-copy">
-            <p class="eyebrow">En repetición</p>
-            <h3 id="featured-track">Tu banda sonora, al descubierto.</h3>
-            <p id="featured-artist">Conecta Spotify para ver las canciones que vuelven a ti.</p>
-            <div class="feature-rule"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
-          </div>
-          <div class="featured-art-wrap"><div class="featured-art" id="featured-art" aria-hidden="true"><span>F</span></div></div>
-          <div class="feature-index"><span>01</span><span>TOP TRACK</span></div>
-        </section>
+    <div class="stats">
+      <section class="block block--tracks" aria-labelledby="title-tracks">
+        <h2 class="block-title" id="title-tracks">Canciones más escuchadas</h2>
+        <ol class="rank-list rank-list--ranked" id="list-top-tracks"></ol>
+      </section>
 
-    <section class="stats-grid">
-      <article class="stats-block">
-        <div class="stats-block-heading"><div><p class="eyebrow">Lo que vuelve</p><h3 class="stats-block-title">Canciones favoritas</h3></div><span class="section-number">01</span></div>
-        <ol class="stats-list" id="list-top-tracks"></ol>
-      </article>
+      <section class="block block--artists" aria-labelledby="title-artists">
+        <h2 class="block-title" id="title-artists">Artistas favoritos</h2>
+        <ol class="rank-list rank-list--ranked" id="list-top-artists"></ol>
+      </section>
 
-      <article class="stats-block">
-        <div class="stats-block-heading"><div><p class="eyebrow">Tu constelación</p><h3 class="stats-block-title">Artistas favoritos</h3></div><span class="section-number">02</span></div>
-        <ol class="stats-list" id="list-top-artists"></ol>
-      </article>
+      <section class="block block--recent" aria-labelledby="title-recent">
+        <h2 class="block-title" id="title-recent">Reproducido recientemente</h2>
+        <ol class="rank-list" id="list-recent"></ol>
+      </section>
+    </div>
 
-      <article class="stats-block stats-block--wide">
-        <div class="stats-block-heading"><div><p class="eyebrow">Ahora mismo</p><h3 class="stats-block-title">Escuchado hace poco</h3></div><span class="section-number">03</span></div>
-        <ol class="stats-list" id="list-recent"></ol>
-      </article>
-    </section>
-
-    <section class="playlist-action" id="playlist-action-section" hidden>
-      <div><p class="eyebrow">Llévatelo contigo</p><h3>Una playlist hecha a tu medida.</h3></div>
-      <button id="btn-open-playlist-modal" class="btn btn--primary btn--playlist" hidden>
-        Crear playlist <span aria-hidden="true">↗</span>
-      </button>
-    </section>
-    <footer class="page-footer"><span>frecuencia <span class="footer-dot">·</span> tu música, en perspectiva</span><span>Hecho para escuchar con calma.</span></footer>
+    <div class="playlist-action">
+      <button id="btn-open-playlist-modal" class="btn btn--primary btn--lg" hidden>Crear playlist de…</button>
+    </div>
   </main>
 
-  <!-- ============ PANEL LATERAL (MENÚ) ============ -->
-  <div id="side-panel-overlay" class="side-panel-overlay" hidden></div>
-  <aside id="side-panel" class="side-panel" hidden>
-    <div class="side-panel-header">
-      <p class="eyebrow">Menú</p>
-      <button id="btn-close-panel" class="btn-panel-close" aria-label="Cerrar menú">✕</button>
+  <!-- ============ Menú lateral ============ -->
+  <div id="side-panel-overlay" class="scrim" hidden></div>
+  <aside id="side-panel" class="drawer" aria-label="Menú" hidden>
+    <div class="drawer-head">
+      <p class="drawer-title">Menú</p>
+      <button id="btn-close-panel" class="icon-btn" aria-label="Cerrar menú"><svg class="icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M205.66,194.34a8,8,0,0,1-11.32,11.32L128,139.31,61.66,205.66a8,8,0,0,1-11.32-11.32L116.69,128,50.34,61.66A8,8,0,0,1,61.66,50.34L128,116.69l66.34-66.35a8,8,0,0,1,11.32,11.32L139.31,128Z"/></svg></button>
     </div>
-    <nav class="side-panel-nav">
-      <button id="btn-share-panel" class="side-panel-item">
-        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
-          <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
-          <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
-        </svg>
-        Compartir
-      </button>
-      <button id="btn-quizzes-panel" class="side-panel-item">
-        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="12" cy="12" r="10"/>
-          <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
-          <line x1="12" y1="17" x2="12.01" y2="17"/>
-        </svg>
-        Quizzes
-      </button>
-      <button id="btn-logout-stats" class="side-panel-item side-panel-item--danger">
-        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-          <polyline points="16 17 21 12 16 7"/>
-          <line x1="21" y1="12" x2="9" y2="12"/>
-        </svg>
-        Cerrar sesión
-      </button>
+    <nav class="drawer-nav">
+      <button id="btn-share-panel" class="drawer-item"><svg class="icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M176,160a39.89,39.89,0,0,0-28.62,12.09l-46.1-29.63a39.8,39.8,0,0,0,0-28.92l46.1-29.63a40,40,0,1,0-8.66-13.45l-46.1,29.63a40,40,0,1,0,0,55.82l46.1,29.63A40,40,0,1,0,176,160Zm0-128a24,24,0,1,1-24,24A24,24,0,0,1,176,32ZM64,152a24,24,0,1,1,24-24A24,24,0,0,1,64,152Zm112,72a24,24,0,1,1,24-24A24,24,0,0,1,176,224Z"/></svg> Compartir</button>
+      <button id="btn-quizzes-panel" class="drawer-item"><svg class="icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M201.89,54.66A103.43,103.43,0,0,0,128.79,24H128A104,104,0,0,0,24,128v56a24,24,0,0,0,24,24H64a24,24,0,0,0,24-24V144a24,24,0,0,0-24-24H40.36A88,88,0,0,1,128,40h.67a87.71,87.71,0,0,1,87,80H192a24,24,0,0,0-24,24v40a24,24,0,0,0,24,24h16a24,24,0,0,0,24-24V128A103.41,103.41,0,0,0,201.89,54.66ZM64,136a8,8,0,0,1,8,8v40a8,8,0,0,1-8,8H48a8,8,0,0,1-8-8V136Zm152,48a8,8,0,0,1-8,8H192a8,8,0,0,1-8-8V144a8,8,0,0,1,8-8h24Z"/></svg> Quizzes</button>
+      <button id="btn-common-panel" class="drawer-item"><svg class="icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M174.63,81.37a80,80,0,1,0-93.26,93.26,80,80,0,1,0,93.26-93.26ZM100.69,136,120,155.31A63.48,63.48,0,0,1,96,160,63.48,63.48,0,0,1,100.69,136Zm33.75,11.13-25.57-25.57a64.65,64.65,0,0,1,12.69-12.69l25.57,25.57A64.65,64.65,0,0,1,134.44,147.13ZM155.31,120,136,100.69A63.48,63.48,0,0,1,160,96,63.48,63.48,0,0,1,155.31,120ZM32,96a64,64,0,0,1,126-16A80.08,80.08,0,0,0,80.05,158,64.11,64.11,0,0,1,32,96ZM160,224A64.11,64.11,0,0,1,98,176,80.08,80.08,0,0,0,176,98,64,64,0,0,1,160,224Z"/></svg> Canciones en común</button>
+      <button id="btn-logout-stats" class="drawer-item drawer-item--danger"><svg class="icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M120,216a8,8,0,0,1-8,8H48a8,8,0,0,1-8-8V40a8,8,0,0,1,8-8h64a8,8,0,0,1,0,16H56V208h56A8,8,0,0,1,120,216Zm109.66-93.66-40-40a8,8,0,0,0-11.32,11.32L204.69,120H112a8,8,0,0,0,0,16h92.69l-26.35,26.34a8,8,0,0,0,11.32,11.32l40-40A8,8,0,0,0,229.66,122.34Z"/></svg> Cerrar sesión</button>
     </nav>
   </aside>
 
-  <!-- ============ MODAL: COMPARTIR ============ -->
-  <div id="share-modal-overlay" class="modal-overlay" hidden>
-    <div class="modal-card" role="dialog" aria-modal="true">
+  <!-- ============ Modal: crear playlist ============ -->
+  <div id="playlist-modal-overlay" class="modal" hidden>
+    <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="playlist-modal-title">
 
-      <!-- Estado: cargando -->
-      <div id="share-loading-view">
-        <div class="loading-spinner share-loading-spinner" aria-hidden="true">
-          <span></span><span></span><span></span><span></span>
+      <div id="modal-view-select" class="sheet-view">
+        <div>
+          <h2 id="playlist-modal-title" class="sheet-title">Crear playlist de…</h2>
+          <p class="muted">Elige uno o varios artistas. Buscaremos sus canciones en tus “Canciones que te gustan” y crearemos una playlist nueva con ellas.</p>
         </div>
-        <p class="share-loading-copy">
-          Generando enlace…
-        </p>
-      </div>
 
-      <!-- Estado: listo -->
-      <div id="share-ready-view" hidden>
-        <p class="eyebrow share-ready-eyebrow">Compartir estadísticas</p>
-        <p class="share-modal-intro">
-          Comparte este enlace o QR con tus amigos para que vean tus estadísticas.
-        </p>
+        <ul class="artist-pick" id="artist-select-list"></ul>
 
-        <div id="share-qr" class="share-qr-box"></div>
-
-        <div class="share-link-box">
-          <input type="text" id="share-link-input" readonly />
-          <button id="btn-copy-link" class="btn btn--ghost share-copy-button">Copiar</button>
-        </div>
-        <p id="share-copy-feedback" class="share-copy-feedback" aria-live="polite"></p>
-
-        <button id="btn-open-share-apps" class="btn btn--primary share-modal-primary">
-          Compartir
-        </button>
-      </div>
-
-      <!-- Estado: error -->
-      <div id="share-error-view" hidden>
-        <p class="share-error-message" id="share-error-msg"></p>
-      </div>
-
-      <div class="modal-actions modal-actions--end share-modal-actions">
-        <button id="btn-close-share-modal" class="btn btn--ghost">Cerrar</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ============ MODAL: APPS DE MENSAJERÍA ============ -->
-  <div id="share-apps-overlay" class="modal-overlay modal-animated" hidden>
-    <div id="share-apps-card" class="modal-card modal-card-animated share-app-card">
-      <p class="eyebrow share-app-eyebrow">Enviar por</p>
-      <p class="share-modal-intro">Elige una app para compartir el enlace</p>
-
-      <div class="share-apps-grid">
-        <a id="share-whatsapp" class="share-app-btn" target="_blank" rel="noopener">
-          <svg viewBox="0 0 24 24" width="28" height="28" fill="#25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>
-          <span>WhatsApp</span>
-        </a>
-
-        <a id="share-telegram" class="share-app-btn" target="_blank" rel="noopener">
-          <svg viewBox="0 0 24 24" width="28" height="28" fill="#26A5E4"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
-          <span>Telegram</span>
-        </a>
-
-        <a id="share-twitter" class="share-app-btn" target="_blank" rel="noopener">
-          <svg viewBox="0 0 24 24" width="28" height="28" fill="#000"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.737-8.835L1.254 2.25H8.08l4.259 5.63L18.244 2.25zm-1.161 17.52h1.833L7.084 4.126H5.117L17.083 19.77z"/></svg>
-          <span>X</span>
-        </a>
-
-        <button id="share-native" class="share-app-btn">
-          <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
-          <span>Más</span>
-        </button>
-      </div>
-
-      <div class="modal-actions modal-actions--end share-modal-actions">
-        <button id="btn-close-share-apps" class="btn btn--ghost">Volver</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ============ MODAL: SELECCIONAR ARTISTAS PARA PLAYLIST ============ -->
-  <div id="playlist-modal-overlay" class="modal-overlay" hidden>
-    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="playlist-modal-title">
-
-      <!-- Vista: selección de artistas + título -->
-      <div id="modal-view-select">
-        <h3 id="playlist-modal-title" class="modal-title">Crear playlist de…</h3>
-        <p class="modal-subtitle">
-          Elige uno o varios artistas. Buscaremos sus canciones en tu
-          "Canciones que te gustan" y crearemos una nueva playlist con ellas.
-        </p>
-
-        <ul class="artist-select-list" id="artist-select-list"></ul>
-
-        <div class="field playlist-title-field">
+        <div class="field">
           <label for="playlist-title-input">Título de la playlist</label>
-          <input type="text" id="playlist-title-input" placeholder="Mi playlist de…" />
+          <input type="text" id="playlist-title-input" maxlength="100" enterkeyhint="done" placeholder="Mi playlist de…" />
         </div>
 
-        <p class="modal-error" id="playlist-modal-error" role="alert"></p>
+        <p class="form-error" id="playlist-modal-error" role="alert"></p>
 
-        <div class="modal-actions">
+        <div class="actions">
           <button id="btn-confirm-playlist" class="btn btn--primary">Crear playlist</button>
-          <button id="btn-cancel-playlist" class="btn btn--ghost">Cancelar</button>
+          <button id="btn-cancel-playlist" class="btn btn--text">Cancelar</button>
         </div>
       </div>
 
-      <!-- Vista: éxito (solo visible tras crear) -->
-      <div id="modal-view-success" hidden>
-        <p class="modal-success-icon" aria-hidden="true">🎵</p>
-        <p class="modal-success-msg" id="playlist-modal-success"></p>
-        <div class="modal-actions modal-actions--center">
+      <div id="modal-view-success" class="sheet-view" hidden>
+        <span class="success-mark" aria-hidden="true"><svg class="icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M173.66,98.34a8,8,0,0,1,0,11.32l-56,56a8,8,0,0,1-11.32,0l-24-24a8,8,0,0,1,11.32-11.32L112,148.69l50.34-50.35A8,8,0,0,1,173.66,98.34ZM232,128A104,104,0,1,1,128,24,104.11,104.11,0,0,1,232,128Zm-16,0a88,88,0,1,0-88,88A88.1,88.1,0,0,0,216,128Z"/></svg></span>
+        <p class="success-msg" id="playlist-modal-success"></p>
+        <div class="actions">
           <button id="btn-close-playlist-success" class="btn btn--primary">Salir</button>
         </div>
       </div>
@@ -358,8 +212,125 @@
     </div>
   </div>
 
-  <script type="module" src="/js/api.js?v=3"></script>
-  <script type="module" src="/js/ui.js?v=3"></script>
-  <script type="module" src="/js/app.js?v=3"></script>
+  <!-- ============ Modal: canciones en común ============ -->
+  <div id="common-modal-overlay" class="modal" hidden>
+    <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="common-title">
+
+      <form id="common-form-urls" class="sheet-view" novalidate>
+        <div>
+          <h2 id="common-title" class="sheet-title">Canciones en común</h2>
+          <p class="muted">Pega los enlaces de 2 o más playlists. Crearemos una playlist nueva con las canciones que están en todas.</p>
+        </div>
+
+        <div class="url-rows" id="common-url-rows"></div>
+
+        <button type="button" id="btn-common-add" class="btn btn--outline"><svg class="icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M224,128a8,8,0,0,1-8,8H136v80a8,8,0,0,1-16,0V136H40a8,8,0,0,1,0-16h80V40a8,8,0,0,1,16,0v80h80A8,8,0,0,1,224,128Z"/></svg> Añadir otra playlist</button>
+        <p class="hint">Spotify solo deja leer playlists tuyas o en las que colaboras.</p>
+
+        <p class="form-error" id="common-error-urls" role="alert"></p>
+        <a class="btn btn--outline" id="common-reconnect-urls" href="/api/spotify/login" hidden>Volver a conectar Spotify</a>
+
+        <div class="actions">
+          <button type="submit" id="btn-common-search" class="btn btn--primary">Buscar canciones en común</button>
+          <button type="button" id="btn-common-cancel" class="btn btn--text">Cancelar</button>
+        </div>
+      </form>
+
+      <form id="common-form-result" class="sheet-view" hidden novalidate>
+        <div>
+          <p class="common-count"><span id="common-count">0</span></p>
+          <h2 id="common-count-label" class="sheet-title">canciones en común</h2>
+        </div>
+
+        <ul class="common-sources" id="common-sources"></ul>
+        <ul class="common-tracks" id="common-preview" aria-label="Algunas de las canciones en común"></ul>
+        <p class="hint" id="common-more" hidden></p>
+
+        <div class="field">
+          <label for="common-title-input">Título de la playlist</label>
+          <input type="text" id="common-title-input" maxlength="100" enterkeyhint="done" autocomplete="off" placeholder="Canciones en común" />
+        </div>
+
+        <p class="form-error" id="common-error-result" role="alert"></p>
+        <a class="btn btn--outline" id="common-reconnect-result" href="/api/spotify/login" hidden>Volver a conectar Spotify</a>
+
+        <div class="actions">
+          <button type="submit" id="btn-common-create" class="btn btn--primary">Crear playlist</button>
+          <button type="button" id="btn-common-back" class="btn btn--text">Atrás</button>
+        </div>
+      </form>
+
+      <div id="common-view-success" class="sheet-view" hidden>
+        <span class="success-mark" aria-hidden="true"><svg class="icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M173.66,98.34a8,8,0,0,1,0,11.32l-56,56a8,8,0,0,1-11.32,0l-24-24a8,8,0,0,1,11.32-11.32L112,148.69l50.34-50.35A8,8,0,0,1,173.66,98.34ZM232,128A104,104,0,1,1,128,24,104.11,104.11,0,0,1,232,128Zm-16,0a88,88,0,1,0-88,88A88.1,88.1,0,0,0,216,128Z"/></svg></span>
+        <p class="success-msg" id="common-success-msg"></p>
+        <div class="actions">
+          <a class="btn btn--outline" id="common-open-spotify" href="https://open.spotify.com" target="_blank" rel="noopener">Abrir en Spotify <svg class="icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M224,104a8,8,0,0,1-16,0V59.32l-66.33,66.34a8,8,0,0,1-11.32-11.32L196.68,48H152a8,8,0,0,1,0-16h64a8,8,0,0,1,8,8Zm-40,24a8,8,0,0,0-8,8v72H48V80h72a8,8,0,0,0,0-16H48A16,16,0,0,0,32,80V208a16,16,0,0,0,16,16H176a16,16,0,0,0,16-16V136A8,8,0,0,0,184,128Z"/></svg></a>
+          <button type="button" id="btn-common-done" class="btn btn--primary">Listo</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ============ Modal: compartir (QR y enlace) ============ -->
+  <div id="share-modal-overlay" class="modal" hidden>
+    <div class="sheet" role="dialog" aria-modal="true" aria-label="Compartir estadísticas">
+
+      <div id="share-loading-view" class="sheet-view" style="align-items:center">
+        <div class="record record--sm" aria-hidden="true"></div>
+        <p class="muted" role="status">Generando enlace…</p>
+      </div>
+
+      <div id="share-ready-view" class="sheet-view" hidden>
+        <div>
+          <h2 class="sheet-title">Compartir estadísticas</h2>
+          <p class="muted">Comparte este enlace o el QR para que tus amigos vean tus estadísticas.</p>
+        </div>
+
+        <div id="share-qr" class="share-qr-box"></div>
+
+        <div>
+          <div class="share-link-box">
+            <input type="text" id="share-link-input" aria-label="Enlace para compartir" readonly />
+            <button id="btn-copy-link" class="btn btn--outline">Copiar</button>
+          </div>
+          <p id="share-copy-feedback" class="copy-feedback" role="status"></p>
+        </div>
+
+        <button id="btn-open-share-apps" class="btn btn--primary btn--lg btn--block">Compartir</button>
+      </div>
+
+      <div id="share-error-view" class="sheet-view" hidden>
+        <p class="form-error visible" id="share-error-msg" role="alert"></p>
+      </div>
+
+      <div class="actions">
+        <button id="btn-close-share-modal" class="btn btn--text">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ Modal: apps de mensajería ============ -->
+  <div id="share-apps-overlay" class="modal modal-animated" hidden>
+    <div id="share-apps-card" class="sheet" role="dialog" aria-modal="true" aria-labelledby="share-apps-title" style="max-width:24rem">
+      <div>
+        <h2 class="sheet-title" id="share-apps-title">Enviar por</h2>
+        <p class="muted">Elige una app para compartir el enlace.</p>
+      </div>
+
+      <div class="share-apps">
+        <a id="share-whatsapp" class="share-app-btn" target="_blank" rel="noopener"><svg class="icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M152.58,145.23l23,11.48A24,24,0,0,1,152,176a72.08,72.08,0,0,1-72-72A24,24,0,0,1,99.29,80.46l11.48,23L101,118a8,8,0,0,0-.73,7.51,56.47,56.47,0,0,0,30.15,30.15A8,8,0,0,0,138,155ZM232,128A104,104,0,0,1,79.12,219.82L45.07,231.17a16,16,0,0,1-20.24-20.24l11.35-34.05A104,104,0,1,1,232,128Zm-40,24a8,8,0,0,0-4.42-7.16l-32-16a8,8,0,0,0-8,.5l-14.69,9.8a40.55,40.55,0,0,1-16-16l9.8-14.69a8,8,0,0,0,.5-8l-16-32A8,8,0,0,0,104,64a40,40,0,0,0-40,40,88.1,88.1,0,0,0,88,88A40,40,0,0,0,192,152Z"/></svg><span>WhatsApp</span></a>
+        <a id="share-telegram" class="share-app-btn" target="_blank" rel="noopener"><svg class="icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M228.88,26.19a9,9,0,0,0-9.16-1.57L17.06,103.93a14.22,14.22,0,0,0,2.43,27.21L72,141.45V200a15.92,15.92,0,0,0,10,14.83,15.91,15.91,0,0,0,17.51-3.73l25.32-26.26L165,220a15.88,15.88,0,0,0,10.51,4,16.3,16.3,0,0,0,5-.79,15.85,15.85,0,0,0,10.67-11.63L231.77,35A9,9,0,0,0,228.88,26.19ZM175.53,208,92.85,135.5l119-85.29Z"/></svg><span>Telegram</span></a>
+        <a id="share-twitter" class="share-app-btn" target="_blank" rel="noopener"><svg class="icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M215,219.85a8,8,0,0,1-7,4.15H160a8,8,0,0,1-6.75-3.71l-40.49-63.63L53.92,221.38a8,8,0,0,1-11.84-10.76l61.77-68L41.25,44.3A8,8,0,0,1,48,32H96a8,8,0,0,1,6.75,3.71l40.49,63.63,58.84-64.72a8,8,0,0,1,11.84,10.76l-61.77,67.95,62.6,98.38A8,8,0,0,1,215,219.85Z"/></svg><span>X</span></a>
+        <button id="share-native" class="share-app-btn" type="button"><svg class="icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M176,160a39.89,39.89,0,0,0-28.62,12.09l-46.1-29.63a39.8,39.8,0,0,0,0-28.92l46.1-29.63a40,40,0,1,0-8.66-13.45l-46.1,29.63a40,40,0,1,0,0,55.82l46.1,29.63A40,40,0,1,0,176,160Zm0-128a24,24,0,1,1-24,24A24,24,0,0,1,176,32ZM64,152a24,24,0,1,1,24-24A24,24,0,0,1,64,152Zm112,72a24,24,0,1,1,24-24A24,24,0,0,1,176,224Z"/></svg><span>Más</span></button>
+      </div>
+
+      <div class="actions">
+        <button id="btn-close-share-apps" class="btn btn--text">Volver</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/js/app.js"></script>
 </body>
 </html>

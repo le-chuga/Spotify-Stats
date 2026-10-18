@@ -6,6 +6,7 @@
 
 const BASE = "/api";
 const TIMEOUT_MS = 10000;
+const SLOW_TIMEOUT_MS = 45000; // leer varias playlists grandes tarda más que una petición normal
 
 function withTimeout(promise, ms) {
   const controller = new AbortController();
@@ -13,8 +14,8 @@ function withTimeout(promise, ms) {
   return { signal: controller.signal, clear: () => clearTimeout(timeoutId) };
 }
 
-async function postJson(path, body) {
-  const { signal, clear } = withTimeout(null, TIMEOUT_MS);
+async function postJson(path, body, timeoutMs = TIMEOUT_MS) {
+  const { signal, clear } = withTimeout(null, timeoutMs);
   try {
     const res = await fetch(`${BASE}${path}`, {
       method: "POST",
@@ -26,7 +27,7 @@ async function postJson(path, body) {
     return { ok: res.ok, status: res.status, data };
   } catch (err) {
     if (err.name === "AbortError") {
-      throw new Error("La petición tardó demasiado (más de 10s) y se canceló");
+      throw new Error(`La petición tardó demasiado (más de ${Math.round(timeoutMs / 1000)}s) y se canceló`);
     }
     throw err;
   } finally {
@@ -68,6 +69,12 @@ export const api = {
   },
   createPlaylist(artistNames, playlistTitle) {
     return postJson("/spotify/playlist", { artistNames, playlistTitle });
+  },
+  previewCommonTracks(urls) {
+    return postJson("/spotify/common/preview", { urls }, SLOW_TIMEOUT_MS);
+  },
+  createCommonPlaylist(uris, title, playlistCount) {
+    return postJson("/spotify/common/create", { uris, title, playlistCount }, SLOW_TIMEOUT_MS);
   },
   getAvatar() {
     return getJson("/avatar");

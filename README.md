@@ -72,6 +72,8 @@ En el dashboard de Cloudflare → Workers → tu worker → Settings → Domains
 ```
 src/
   worker.js                          # Entry point (Hono)
+  domain/
+    commonTracks.js                  # Lógica pura: leer URLs de playlists y calcular canciones en común
   infrastructure/
     session.js                       # Sesiones con KV
     repositories/
@@ -86,7 +88,40 @@ src/
       shareRoutes.js                 # /api/share/*
       quizRoutes.js                  # /api/quiz/*
       deezerRoutes.js                # /api/deezer/*
-public/                              # Frontend estático (sin cambios)
+public/                              # Frontend estático
+  js/common.js                       # Modal "Canciones en común"
 schema.sql                           # Schema de D1
 wrangler.toml                        # Config de Cloudflare
 ```
+
+## Canciones en común
+
+Menú ☰ → **Canciones en común**. Se pegan los enlaces de 2 a 6 playlists (también acepta
+`spotify:playlist:…` o varios enlaces pegados de golpe), se muestra cuántas canciones están en
+todas, se pide un título y se crea una playlist privada nueva en la cuenta de Spotify con la sesión
+iniciada. Dos ediciones de una misma canción (p. ej. "Yesterday" y "Yesterday - Remastered 2009")
+cuentan como la misma.
+
+- `POST /api/spotify/common/preview` → lee las playlists y devuelve las coincidencias.
+- `POST /api/spotify/common/create` → crea la playlist con el título elegido.
+
+**Limitación de Spotify:** desde febrero de 2026, `GET /playlists/{id}/items` solo devuelve el
+contenido de playlists **propias o colaborativas** para apps en modo desarrollo. Con playlists de
+otras personas la app avisa con un mensaje claro; para leerlas hace falta pedir *Extended Quota
+Mode* en el dashboard de Spotify.
+
+**Permisos nuevos:** se han añadido los scopes `playlist-read-private` y
+`playlist-read-collaborative`. Quien ya tenía Spotify vinculado debe volver a conectar su cuenta una
+vez (la app muestra el botón "Volver a conectar Spotify" cuando hace falta).
+
+## Diseño
+
+- **Layout:** flexbox en toda la app, mobile first (probado desde 320 px hasta escritorio).
+- **Color:** tinta índigo, papel frío y un único acento mandarina. Modo oscuro automático
+  (`prefers-color-scheme`); el verde y el frambuesa solo marcan acierto y fallo en el quiz.
+- **Tipografía:** Unbounded (títulos y cifras) e Instrument Sans (texto), autoalojadas en `public/fonts`.
+- **Iconos:** Phosphor, incrustados como SVG en el HTML.
+- **Móvil:** `100dvh`, áreas seguras (`env(safe-area-inset-*)`), objetivos táctiles de 44 px o más,
+  campos a 16 px (iOS no hace zoom) y `:hover` solo con puntero fino.
+- **Seguridad:** el nombre de Spotify, el Id de usuario y la foto se pintan con `textContent`,
+  nunca como HTML, y el servidor solo acepta fotos en formato `data:image/...;base64`.

@@ -2,21 +2,26 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#11140f" />
-  <meta name="description" content="Un resumen de escucha compartido desde Frecuencia." />
-  <meta property="og:title" content="Frecuencia · Resumen compartido" />
-  <meta property="og:description" content="Una escucha, muchas historias." />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content" />
+  <meta name="color-scheme" content="light dark" />
+  <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f7f6fb" />
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#14102b" />
+  <meta name="description" content="Estadísticas de escucha compartidas desde Frecuencia." />
+  <title>Estadísticas compartidas en Frecuencia</title>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-  <title>Frecuencia · Resumen compartido</title>
+  <link rel="preload" href="/fonts/unbounded-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href="/fonts/instrument-sans-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="stylesheet" href="/css/styles.css" />
 </head>
-<body class="share-body">
-  <div class="ambient-orb ambient-orb--one" aria-hidden="true"></div>
-  <main id="app" class="share-page">
-    <div class="share-brand"><strong>frecuencia</strong><span>Una escucha, muchas historias</span></div>
-    <p class="share-loading" id="loading-msg" role="status">Cargando el resumen…</p>
+<body>
+  <header class="share-bar">
+    <a class="wordmark-link" href="/">Frecuencia</a>
+  </header>
+
+  <main id="app" class="screen screen--stats share-page">
+    <p class="share-loading" id="loading-msg" role="status">Cargando estadísticas…</p>
   </main>
-  <script src="/js/share.js" defer></script>
+
+  <script type="module" src="/js/share.js"></script>
 </body>
 </html>

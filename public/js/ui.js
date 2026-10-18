@@ -5,6 +5,9 @@
  * no conocen la API ni la lógica de negocio.
  */
 
+import { timeAgo } from "./format.js";
+import { renderList, buildListItem } from "./list-item.js";
+
 const screens = {
   auth: document.getElementById("screen-auth"),
   connect: document.getElementById("screen-connect"),
@@ -20,8 +23,8 @@ export function showScreen(name) {
   Object.entries(screens).forEach(([key, el]) => {
     el.hidden = key !== name;
   });
-  document.body.classList.toggle("screen-auth-active", name === "auth");
-  document.body.classList.toggle("screen-connect-active", name === "connect");
+  // La pantalla de stats puede necesitar más altura que el viewport:
+  // activamos scroll de página solo para ella.
   document.body.classList.toggle("screen-stats-active", name === "stats");
 }
 
@@ -150,9 +153,6 @@ const statsEls = {
   error: document.getElementById("stats-error"),
   displayName: document.getElementById("stats-display-name"),
   meta: document.getElementById("profile-meta"),
-  featuredTrack: document.getElementById("featured-track"),
-  featuredArtist: document.getElementById("featured-artist"),
-  featuredArt: document.getElementById("featured-art"),
   topTracks: document.getElementById("list-top-tracks"),
   topArtists: document.getElementById("list-top-artists"),
   recent: document.getElementById("list-recent"),
@@ -161,44 +161,6 @@ const statsEls = {
 export function showStatsError(message) {
   statsEls.error.textContent = message;
   statsEls.error.hidden = false;
-}
-
-function renderList(container, items, mapFn) {
-  container.innerHTML = "";
-  if (!items || items.length === 0) {
-    const li = document.createElement("li");
-    li.className = "stats-empty";
-    li.textContent = "No hay datos disponibles todavía.";
-    container.appendChild(li);
-    return;
-  }
-  items.forEach((item) => container.appendChild(mapFn(item)));
-}
-
-function buildListItem({ imageUrl, title, subtitle }) {
-  const li = document.createElement("li");
-
-  if (imageUrl) {
-    const img = document.createElement("img");
-    img.src = imageUrl;
-    img.alt = "";
-    li.appendChild(img);
-  }
-
-  const textWrap = document.createElement("div");
-  textWrap.className = "item-text";
-
-  const titleEl = document.createElement("p");
-  titleEl.className = "item-title";
-  titleEl.textContent = title;
-
-  const subtitleEl = document.createElement("p");
-  subtitleEl.className = "item-subtitle";
-  subtitleEl.textContent = subtitle;
-
-  textWrap.append(titleEl, subtitleEl);
-  li.appendChild(textWrap);
-  return li;
 }
 
 /**
@@ -210,22 +172,8 @@ export function renderSpotifyStats(stats) {
 
   if (stats.profile) {
     statsEls.displayName.textContent = stats.profile.displayName || "Tu perfil";
-    statsEls.meta.textContent = `${stats.profile.followers ?? 0} seguidores · conectado a Spotify`;
-  }
-
-  const featured = stats.topTracks?.[0];
-  if (featured) {
-    statsEls.featuredTrack.textContent = featured.name || "Tu canción más escuchada";
-    statsEls.featuredArtist.textContent = featured.artist || "Entre tus favoritas";
-    if (featured.imageUrl) {
-      statsEls.featuredArt.style.backgroundImage = `url("${featured.imageUrl}")`;
-      statsEls.featuredArt.classList.add("has-image");
-    }
-  } else {
-    statsEls.featuredTrack.textContent = "Tu banda sonora, al descubierto.";
-    statsEls.featuredArtist.textContent = "Aún no hay canciones para mostrar.";
-    statsEls.featuredArt.style.backgroundImage = "";
-    statsEls.featuredArt.classList.remove("has-image");
+    const n = stats.profile.followers;
+    statsEls.meta.textContent = `${n} ${n === 1 ? "seguidor" : "seguidores"}`;
   }
 
   renderList(statsEls.topTracks, stats.topTracks, (t) =>
@@ -236,7 +184,7 @@ export function renderSpotifyStats(stats) {
     buildListItem({
       imageUrl: a.imageUrl,
       title: a.name,
-      subtitle: a.genres?.slice(0, 2).join(", ") || "Sin géneros listados",
+      subtitle: a.genres?.slice(0, 2).join(", ") || "",
     })
   );
 
@@ -244,13 +192,13 @@ export function renderSpotifyStats(stats) {
     buildListItem({
       imageUrl: r.imageUrl,
       title: r.name,
-      subtitle: `${r.artist} · ${new Date(r.playedAt).toLocaleString("es-ES")}`,
+      subtitle: r.artist,
+      meta: timeAgo(r.playedAt),
     })
   );
 }
 
 const modalEls = {
-  playlistSection: document.getElementById("playlist-action-section"),
   overlay: document.getElementById("playlist-modal-overlay"),
   artistList: document.getElementById("artist-select-list"),
   titleInput: document.getElementById("playlist-title-input"),
@@ -265,7 +213,6 @@ const modalEls = {
 };
 
 export function showPlaylistButton(artists) {
-  modalEls.playlistSection.hidden = false;
   modalEls.btnOpen.hidden = false;
   modalEls.btnOpen._artists = artists;
 }
@@ -288,14 +235,18 @@ export function openPlaylistModal() {
     checkbox.type = "checkbox";
     checkbox.value = artist.name;
 
-    const img = document.createElement("img");
-    img.src = artist.imageUrl || "";
-    img.alt = "";
-
     const name = document.createElement("span");
     name.textContent = artist.name;
 
-    label.append(checkbox, img, name);
+    if (artist.imageUrl) {
+      const img = document.createElement("img");
+      img.src = artist.imageUrl;
+      img.alt = "";
+      img.loading = "lazy";
+      label.append(checkbox, img, name);
+    } else {
+      label.append(checkbox, name);
+    }
     li.appendChild(label);
     modalEls.artistList.appendChild(li);
   });

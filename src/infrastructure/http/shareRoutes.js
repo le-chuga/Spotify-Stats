@@ -1,8 +1,8 @@
 import { Hono } from "hono";
-import { D1UserRepository } from "../../repositories/D1UserRepository.js";
-import { D1SnapshotRepository } from "../../repositories/D1SnapshotRepository.js";
-import { SpotifyClient } from "../../spotify/SpotifyClient.js";
-import { getSession } from "../../session.js";
+import { D1UserRepository } from "../repositories/D1UserRepository.js";
+import { D1SnapshotRepository } from "../repositories/D1SnapshotRepository.js";
+import { SpotifyClient } from "../spotify/SpotifyClient.js";
+import { getSession } from "../session.js";
 
 export const shareRoutes = new Hono();
 

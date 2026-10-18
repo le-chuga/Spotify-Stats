@@ -33,49 +33,74 @@ const BACKGROUND_ARTISTS = [
 
 async function loadSearchBackground() {
   const bg = document.getElementById("search-bg");
-
-  // Recoger URLs de portadas de álbumes desde iTunes
-  const albumUrls = [];
-  const shuffled = shuffle(BACKGROUND_ARTISTS).slice(0, 7);
-  const responses = await Promise.allSettled(shuffled.map((name) =>
-    fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(name)}&entity=song&limit=3`)
-      .then((res) => res.json())
-  ));
-  responses.forEach((response) => {
-    if (response.status !== "fulfilled") return;
-    (response.value.results || [])
-      .filter((r) => r.wrapperType === "track" && r.artworkUrl100)
-      .forEach((r) => albumUrls.push(r.artworkUrl100.replace("100x100", "400x400")));
-  });
-
-  if (!albumUrls.length) return;
-
-  // Crear celdas del grid y asignar imágenes iniciales
   const CELLS = 15;
+  const albumUrls = [];
   const cells = [];
+
+  // Las celdas existen desde el primer instante; las portadas se pintan según llegan
   for (let i = 0; i < CELLS; i++) {
     const div = document.createElement("div");
-    div.style.cssText = "position:relative;overflow:hidden;";
+    div.className = "bg-cell";
     const img = document.createElement("img");
-    img.style.cssText = "width:100%;height:100%;object-fit:cover;transition:opacity 1s ease;";
-    img.src = albumUrls[i % albumUrls.length];
+    img.className = "bg-img";
+    img.alt = "";
+    img.style.opacity = "0";
     div.appendChild(img);
     bg.appendChild(div);
-    cells.push({ div, img, currentIndex: i });
+    cells.push({ img, filled: false });
   }
 
-  // Rotar imágenes aleatoriamente: cada celda cambia cada 3s con offset aleatorio
-  cells.forEach((cell, idx) => {
+  function showCover(cell, url, fast) {
+    if (fast) cell.img.style.transition = "opacity 0.4s ease";
+    cell.img.addEventListener(
+      "load",
+      () => {
+        cell.img.style.opacity = "1";
+        if (fast) setTimeout(() => (cell.img.style.transition = ""), 450);
+      },
+      { once: true }
+    );
+    cell.img.src = url;
+  }
+
+  function fillPending() {
+    for (const cell of cells) {
+      if (cell.filled || albumUrls.length === 0) continue;
+      cell.filled = true;
+      showCover(cell, albumUrls[Math.floor(Math.random() * albumUrls.length)], true);
+    }
+  }
+
+  // Todas las peticiones a iTunes a la vez (antes iban una detrás de otra)
+  const names = shuffle(BACKGROUND_ARTISTS.map((n) => n.trim()));
+  await Promise.allSettled(
+    names.map(async (name) => {
+      try {
+        const res = await fetch(
+          `https://itunes.apple.com/search?term=${encodeURIComponent(name)}&entity=song&limit=3`
+        );
+        const data = await res.json();
+        data.results
+          .filter((r) => r.wrapperType === "track" && r.artworkUrl100)
+          .forEach((r) => albumUrls.push(r.artworkUrl100.replace("100x100", "400x400")));
+        fillPending();
+      } catch { /* ignorar */ }
+    })
+  );
+
+  if (!albumUrls.length) return;
+  fillPending();
+
+  // Cada celda cambia de portada cada 4 s (fade de 1,5 s), con desfase aleatorio
+  cells.forEach((cell) => {
     setTimeout(() => {
       setInterval(() => {
         cell.img.style.opacity = "0";
         setTimeout(() => {
-          cell.currentIndex = Math.floor(Math.random() * albumUrls.length);
-          cell.img.src = albumUrls[cell.currentIndex];
-          cell.img.style.opacity = "1";
-        }, 1000); // esperar a que termine el fade out antes de cambiar src
-      }, 3000);
-    }, Math.random() * 3000); // offset aleatorio para que no cambien todos a la vez
+          showCover(cell, albumUrls[Math.floor(Math.random() * albumUrls.length)], false);
+        }, 1500);
+      }, 4000);
+    }, Math.random() * 4000);
   });
 }
 
@@ -89,7 +114,6 @@ let searchTimeout = null;
 
 searchInput.addEventListener("input", () => {
   clearTimeout(searchTimeout);
-  document.getElementById("quiz-error").textContent = "";
   const q = searchInput.value.trim();
   if (q.length < 2) { searchResults.hidden = true; return; }
   searchTimeout = setTimeout(() => searchArtists(q), 350);
@@ -102,20 +126,9 @@ async function searchArtists(q) {
       `/api/deezer/artists?q=${encodeURIComponent(q)}`
     );
     const data = await res.json();
-    const results = data.data || [];
-    if (!results.length) {
-      searchResults.replaceChildren();
-      const empty = document.createElement("p");
-      empty.className = "search-empty";
-      empty.textContent = "No encontramos artistas con ese nombre.";
-      searchResults.appendChild(empty);
-      searchResults.hidden = false;
-      return;
-    }
-    renderSearchResults(results);
+    renderSearchResults(data.data || []);
   } catch {
     searchResults.hidden = true;
-    document.getElementById("quiz-error").textContent = "No se pudo buscar ahora. Prueba de nuevo en un momento.";
   }
 }
 
@@ -127,15 +140,18 @@ function renderSearchResults(results) {
     const div = document.createElement("div");
     div.className = "search-result-item";
 
-    const img = document.createElement("img");
-    // picture_small es la foto real del artista en Deezer
-    img.src = r.picture_small || "";
-    img.alt = "";
-
     const span = document.createElement("span");
     span.textContent = r.name;
 
-    div.append(img, span);
+    // picture_small es la foto real del artista en Deezer
+    if (r.picture_small) {
+      const img = document.createElement("img");
+      img.src = r.picture_small;
+      img.alt = "";
+      div.append(img, span);
+    } else {
+      div.append(span);
+    }
     div.addEventListener("click", () => selectArtist(r));
     searchResults.appendChild(div);
   });
@@ -147,7 +163,6 @@ document.addEventListener("click", (e) => {
 });
 
 async function selectArtist(deezerArtist) {
-  document.getElementById("quiz-error").textContent = "";
   searchResults.hidden = true;
   searchInput.value = deezerArtist.name;
 
@@ -170,7 +185,10 @@ async function selectArtist(deezerArtist) {
     itunesArtistId,
   };
 
-  document.getElementById("modal-artist-img").src = imageUrl;
+  const artistImg = document.getElementById("modal-artist-img");
+  artistImg.hidden = !imageUrl;
+  if (imageUrl) artistImg.src = imageUrl;
+  document.getElementById("modal-artist-error").classList.remove("visible");
   document.getElementById("modal-artist-name").textContent = deezerArtist.name;
   document.getElementById("modal-artist-meta").textContent = "Guess the Song";
   document.getElementById("quiz-artist-modal").hidden = false;
@@ -179,24 +197,41 @@ async function selectArtist(deezerArtist) {
 // ═══════════════════════════════════════════════════════
 //  START → cargar canciones → cuenta atrás → juego
 // ═══════════════════════════════════════════════════════
-document.getElementById("btn-start-quiz").addEventListener("click", async () => {
-  document.getElementById("quiz-artist-modal").hidden = true;
-  let tracks;
+const artistModal = document.getElementById("quiz-artist-modal");
+const artistError = document.getElementById("modal-artist-error");
+const startBtn = document.getElementById("btn-start-quiz");
+
+startBtn.addEventListener("click", async () => {
+  artistError.classList.remove("visible");
+  startBtn.disabled = true;
+  startBtn.textContent = "Cargando canciones…";
+
+  let tracks = [];
   try {
     tracks = await fetchArtistTracks();
-  } catch {
-    tracks = [];
-  }
+  } catch { /* se trata como "sin canciones" */ }
+
+  startBtn.disabled = false;
+  startBtn.textContent = "Start";
+
   if (tracks.length < 4) {
-    document.getElementById("quiz-error").textContent = "No encontramos suficientes fragmentos para este artista. Prueba con otro.";
-    document.getElementById("quiz-artist-modal").hidden = false;
+    artistError.textContent =
+      "No encontramos suficientes canciones con preview de este artista. Prueba con otro.";
+    artistError.classList.add("visible");
     return;
   }
+
+  artistModal.hidden = true;
   quizTracks = shuffle(tracks).slice(0, 10);
   currentQ = 0;
   correctCount = 0;
   showScreen("countdown");
   startCountdown();
+});
+
+document.getElementById("btn-cancel-artist").addEventListener("click", () => {
+  artistModal.hidden = true;
+  searchInput.focus();
 });
 
 async function fetchArtistTracks() {
@@ -354,31 +389,33 @@ function showLeaderboard(leaderboard) {
       : `${correctCount}/10 correctas — necesitas 10/10 para entrar en el top`;
 
   const tbody = document.getElementById("lb-body");
-  tbody.innerHTML = "";
+  tbody.replaceChildren();
 
   if (!leaderboard.length) {
     const tr = document.createElement("tr");
     const td = document.createElement("td");
     td.colSpan = 3;
-    td.className = "leaderboard-empty";
-    td.textContent = "Sé el primero en la clasificación con 10/10";
+    td.className = "lb-empty";
+    td.textContent = "Sé el primero en el ranking con 10/10.";
     tr.appendChild(td);
     tbody.appendChild(tr);
   } else {
     leaderboard.forEach((row, i) => {
       const tr = document.createElement("tr");
       if (i === 0) tr.className = "lb-rank-1";
-      else if (i === 1) tr.className = "lb-rank-2";
-      else if (i === 2) tr.className = "lb-rank-3";
-      const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `${i + 1}`;
+
       const rank = document.createElement("td");
-      const account = document.createElement("td");
+      rank.className = "lb-rank";
+      rank.textContent = String(i + 1);
+
+      const user = document.createElement("td");
+      user.textContent = row.account_id;
+
       const time = document.createElement("td");
-      rank.textContent = medal;
-      account.textContent = row.account_id || "Usuario";
       time.className = "lb-time-cell";
       time.textContent = formatTime(row.best_time);
-      tr.append(rank, account, time);
+
+      tr.append(rank, user, time);
       tbody.appendChild(tr);
     });
   }

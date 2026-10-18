@@ -4,12 +4,12 @@
  */
 
 import { Hono } from "hono";
-import { authRoutes } from "./infrastructure/http/routes/authRoutes.js";
-import { spotifyRoutes } from "./infrastructure/http/routes/spotifyRoutes.js";
-import { avatarRoutes } from "./infrastructure/http/routes/avatarRoutes.js";
-import { shareRoutes } from "./infrastructure/http/routes/shareRoutes.js";
-import { quizRoutes } from "./infrastructure/http/routes/quizRoutes.js";
-import { deezerRoutes } from "./infrastructure/http/routes/deezerRoutes.js";
+import { authRoutes } from "./infrastructure/http/authRoutes.js";
+import { spotifyRoutes } from "./infrastructure/http/spotifyRoutes.js";
+import { avatarRoutes } from "./infrastructure/http/avatarRoutes.js";
+import { shareRoutes } from "./infrastructure/http/shareRoutes.js";
+import { quizRoutes } from "./infrastructure/http/quizRoutes.js";
+import { deezerRoutes } from "./infrastructure/http/deezerRoutes.js";
 
 const app = new Hono();
 
@@ -51,4 +51,3 @@ app.get("*", async (c) => {
 });
 
 export default app;
-
