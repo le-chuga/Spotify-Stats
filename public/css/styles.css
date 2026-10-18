@@ -29,35 +29,35 @@
 :root {
   color-scheme: light dark;
 
-  --paper: #f7f6fb;
+  --paper: #f2f8f6;
   --surface: #ffffff;
-  --surface-2: #edebf6;
-  --line: #dcd8ec;
-  --line-strong: #b9b3d6;
-  --ink: #1b1340;
-  --ink-2: #5a5483;
+  --surface-2: #e3f0ec;
+  --line: #cfe3dc;
+  --line-strong: #9fc4b8;
+  --ink: #0d2b2a;
+  --ink-2: #486b66;
 
-  --accent: #ff5b14;
-  --accent-hover: #ff7433;
-  --accent-ink: #1b1340;   /* texto sobre el acento */
-  --accent-deep: #b53300;  /* acento usado como texto sobre claro */
-  --accent-soft: #ffe3d3;
+  --accent: #1ed760;
+  --accent-hover: #4be07f;
+  --accent-ink: #062a14;   /* texto sobre el acento */
+  --accent-deep: #0b7a3a;  /* acento usado como texto sobre claro */
+  --accent-soft: #d4f7e0;
 
-  --good: #12805c;  --on-good: #ffffff;
+  --good: #0f7a8a;  --on-good: #ffffff;
   --bad: #c9264a;   --on-bad: #ffffff;
 
-  --avatar-bg: #8f8ba6;
-  --avatar-plus: #bdb9d1;
+  --avatar-bg: #86a89f;
+  --avatar-plus: #b4d0c8;
 
-  --tint-1: #ffe3d3;
-  --tint-2: #e6e2ff;
-  --tint-3: #d6f5e8;
+  --tint-1: #d4f7e0;
+  --tint-2: #d6eef7;
+  --tint-3: #e2f6d4;
 
-  --vinyl-a: #1b1340;
-  --vinyl-b: #2e2766;
+  --vinyl-a: #0d2b2a;
+  --vinyl-b: #1d5a52;
 
-  --shadow: 0 1.25rem 2.5rem -1rem rgb(27 19 64 / 0.3);
-  --scrim: rgb(20 16 43 / 0.55);
+  --shadow: 0 1.25rem 2.5rem -1rem rgb(13 43 42 / 0.3);
+  --scrim: rgb(6 24 23 / 0.55);
 
   --font-display: "Unbounded", "Arial Rounded MT Bold", system-ui, sans-serif;
   --font-body: "Instrument Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
@@ -77,32 +77,32 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --paper: #14102b;
-    --surface: #1e1940;
-    --surface-2: #2a2457;
-    --line: #3a3470;
-    --line-strong: #5a53a0;
-    --ink: #f4f1ff;
-    --ink-2: #aaa4d6;
+    --paper: #08191a;
+    --surface: #102a2a;
+    --surface-2: #183a38;
+    --line: #245049;
+    --line-strong: #3f7f73;
+    --ink: #eafaf4;
+    --ink-2: #8fc2b5;
 
-    --accent: #ff6a2b;
-    --accent-hover: #ff8450;
-    --accent-ink: #14102b;
-    --accent-deep: #ff8f5e;
-    --accent-soft: #35244f;
+    --accent: #1ed760;
+    --accent-hover: #4be07f;
+    --accent-ink: #062a14;
+    --accent-deep: #5ae88f;
+    --accent-soft: #12402c;
 
-    --good: #3ddc97;  --on-good: #0b2a1e;
+    --good: #5ae88f;  --on-good: #0b2a1e;
     --bad: #ff6b8a;   --on-bad: #2b0712;
 
-    --avatar-bg: #3a3470;
-    --avatar-plus: #6b65a8;
+    --avatar-bg: #245049;
+    --avatar-plus: #4f8f82;
 
-    --tint-1: #35244f;
-    --tint-2: #1f2a5a;
-    --tint-3: #14403a;
+    --tint-1: #12402c;
+    --tint-2: #12384a;
+    --tint-3: #2a4a14;
 
     --shadow: 0 1.25rem 2.5rem -1rem rgb(0 0 0 / 0.65);
-    --scrim: rgb(5 3 15 / 0.65);
+    --scrim: rgb(0 10 9 / 0.65);
   }
 }
 
