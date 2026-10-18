@@ -9,6 +9,7 @@ import { spotifyRoutes } from "./infrastructure/http/spotifyRoutes.js";
 import { avatarRoutes } from "./infrastructure/http/avatarRoutes.js";
 import { shareRoutes } from "./infrastructure/http/shareRoutes.js";
 import { quizRoutes } from "./infrastructure/http/quizRoutes.js";
+import { friendRoutes } from "./infrastructure/http/friendRoutes.js";
 import { deezerRoutes } from "./infrastructure/http/deezerRoutes.js";
 
 const app = new Hono();
@@ -20,6 +21,7 @@ app.route("/api/avatar", avatarRoutes);
 app.route("/api/share", shareRoutes);
 app.route("/api/quiz", quizRoutes);
 app.route("/api/deezer", deezerRoutes);
+app.route("/api/friends", friendRoutes);
 
 // ── server-info ────────────────────────────────────────
 app.get("/api/server-info", (c) => {

@@ -32,3 +32,17 @@ CREATE TABLE IF NOT EXISTS snapshots (
   avatar_base64 TEXT,
   created_at TEXT DEFAULT (datetime('now'))
 );
+
+-- Top con amigos: un enlace de invitación por usuario y amistades mutuas (una fila por sentido)
+CREATE TABLE IF NOT EXISTS friend_invites (
+  code TEXT PRIMARY KEY,
+  account_id TEXT UNIQUE NOT NULL,
+  created_at TEXT DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS friendships (
+  account_id TEXT NOT NULL,
+  friend_id TEXT NOT NULL,
+  created_at TEXT DEFAULT (datetime('now')),
+  PRIMARY KEY (account_id, friend_id)
+);

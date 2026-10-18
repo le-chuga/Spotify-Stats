@@ -1104,3 +1104,40 @@ input { font-size: 1rem; } /* 16px: iOS no hace zoom al enfocar */
   }
   .record { animation: none !important; }
 }
+
+/* ---------- Top con amigos ---------- */
+.friend-list { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 0.5rem; max-height: 16rem; overflow-y: auto; overscroll-behavior: contain; }
+.friend-list .stats-empty { color: var(--ink-2); padding: 0.5rem 0; }
+.friend-row {
+  display: flex; align-items: center; gap: 0.75rem; width: 100%; min-height: 3.5rem;
+  padding: 0.5rem 0.75rem; border: 2px solid var(--line); border-radius: 1rem;
+  background: var(--surface); color: var(--ink); font: inherit; text-align: left; cursor: pointer;
+  transition: border-color 160ms ease, transform 120ms var(--ease-out);
+}
+.friend-row:hover, .friend-row:focus-visible { border-color: var(--accent-deep); outline: none; }
+.friend-row:active { transform: scale(0.985); }
+.friend-row__name { flex: 1 1 auto; min-width: 0; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.friend-row__go { flex: none; font-size: 0.8125rem; font-weight: 600; color: var(--accent-deep); }
+.friend-avatar {
+  flex: none; display: inline-grid; place-items: center; width: 2.5rem; height: 2.5rem; border-radius: 50%;
+  overflow: hidden; background: var(--accent-soft); color: var(--accent-deep);
+  font-family: var(--font-display); font-weight: 700;
+}
+.friend-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.friend-avatar--lg { width: 3.5rem; height: 3.5rem; font-size: 1.25rem; }
+.friend-head { display: flex; align-items: center; gap: 0.875rem; }
+.friend-head .sheet-title { overflow-wrap: anywhere; }
+.live-badge { display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.8125rem; font-weight: 600; color: var(--ink-2); }
+.live-badge::before { content: ""; width: 0.5rem; height: 0.5rem; border-radius: 50%; background: var(--accent); animation: live-pulse 1.6s ease-in-out infinite; }
+@keyframes live-pulse { 50% { opacity: 0.3; } }
+@media (prefers-reduced-motion: reduce) { .live-badge::before { animation: none; } }
+.friend-now {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 0.875rem; padding: 0.75rem;
+  border-radius: 1rem; background: var(--accent-soft);
+}
+.friend-now[hidden] { display: none; }
+.friend-now img { flex: none; width: 3.5rem; height: 3.5rem; border-radius: 0.75rem; object-fit: cover; }
+.friend-now__tag { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--accent-deep); }
+.friend-now__bar { flex: 1 1 100%; height: 0.25rem; border-radius: 1rem; background: color-mix(in srgb, var(--accent-deep) 25%, transparent); overflow: hidden; }
+.friend-now__bar span { display: block; height: 100%; background: var(--accent-deep); }
+#friends-view-detail .block-title { margin-bottom: 0.25rem; }

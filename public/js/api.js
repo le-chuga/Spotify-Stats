@@ -51,6 +51,17 @@ async function getJson(path) {
   }
 }
 
+async function deleteJson(path) {
+  const { signal, clear } = withTimeout(null, TIMEOUT_MS);
+  try {
+    const res = await fetch(`${BASE}${path}`, { method: "DELETE", signal });
+    const data = await res.json().catch(() => ({}));
+    return { ok: res.ok, status: res.status, data };
+  } finally {
+    clear();
+  }
+}
+
 export const api = {
   register(accountId, password) {
     return postJson("/auth/register", { accountId, password });
@@ -84,6 +95,21 @@ export const api = {
   },
   saveAvatar(avatarBase64) {
     return postJson("/avatar", { avatarBase64 });
+  },
+  friends() {
+    return getJson("/friends");
+  },
+  resetFriendInvite() {
+    return postJson("/friends/invite/reset", {});
+  },
+  joinFriend(code) {
+    return postJson("/friends/join", { code });
+  },
+  removeFriend(id) {
+    return deleteJson(`/friends/${encodeURIComponent(id)}`);
+  },
+  friendStats(id) {
+    return getJson(`/friends/${encodeURIComponent(id)}/stats`);
   },
   createShare() {
     return postJson("/share", {});

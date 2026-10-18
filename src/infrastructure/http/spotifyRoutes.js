@@ -17,7 +17,7 @@ async function getAuthedUser(c) {
   return { sessionId, accountId: data.accountId, user, repo, spotify };
 }
 
-async function getFreshToken(user, repo, spotify, accountId) {
+export async function getFreshToken(user, repo, spotify, accountId) {
   let { accessToken, refreshToken, expiresAt } = user.spotifyTokens;
   if (!accessToken || Date.now() > Number(expiresAt) - 60000) {
     const refreshed = await spotify.refreshAccessToken(refreshToken);

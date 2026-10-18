@@ -7,12 +7,18 @@
 import { api } from "./api.js";
 import * as ui from "./ui.js";
 import { openCommonModal } from "./common.js";
+import { openFriendsModal, checkPendingInvite } from "./friends.js";
 
 /* ----------------------------------------------------------
    1) Comprobar al cargar si ya hay sesión / Spotify vinculado
    ---------------------------------------------------------- */
 async function init() {
   const params = new URLSearchParams(window.location.search);
+  // Enlace de invitación de un amigo (?amigo=CODIGO): se guarda hasta que haya sesión
+  if (params.get("amigo")) {
+    try { sessionStorage.setItem("pendingFriendCode", params.get("amigo")); } catch {}
+    window.history.replaceState({}, "", window.location.pathname);
+  }
   if (params.get("spotify_error")) {
     ui.showSpotifyLinkError("No se pudo vincular Spotify: " + params.get("spotify_error"));
   }
@@ -151,6 +157,8 @@ async function loadStats() {
       ui.showPlaylistButton(statsRes.data.stats.topArtists);
     }
   }
+
+  checkPendingInvite();
 
   // Renderizar avatar (puede ser null si no tiene)
   if (avatarRes.ok) {
@@ -463,6 +471,11 @@ document.getElementById("btn-share-panel").addEventListener("click", openShareMo
 document.getElementById("btn-common-panel").addEventListener("click", () => {
   closePanel("side-panel", "side-panel-overlay");
   openCommonModal();
+});
+
+document.getElementById("btn-friends-panel").addEventListener("click", () => {
+  closePanel("side-panel", "side-panel-overlay");
+  openFriendsModal();
 });
 
 document.getElementById("btn-close-share-modal").addEventListener("click", () => {

@@ -5,6 +5,7 @@ const SPOTIFY_API_BASE = "https://api.spotify.com/v1";
 const SCOPES = [
   "user-top-read",
   "user-read-recently-played",
+  "user-read-currently-playing",
   "user-read-email",
   "user-read-private",
   "user-library-read",
@@ -84,6 +85,23 @@ export class SpotifyClient {
       topTracks: (topTracks.items || []).map(t => ({ name: t.name, artist: t.artists.map(a => a.name).join(", "), album: t.album?.name, imageUrl: t.album?.images?.[0]?.url || null, popularity: t.popularity })),
       topArtists: (topArtists.items || []).map(a => ({ name: a.name, genres: a.genres, imageUrl: a.images?.[0]?.url || null, popularity: a.popularity })),
       recentlyPlayed: (recentlyPlayed.items || []).map(r => ({ name: r.track.name, artist: r.track.artists.map(a => a.name).join(", "), playedAt: r.played_at, imageUrl: r.track.album?.images?.[0]?.url || null })),
+    };
+  }
+
+  /** Canción que suena ahora mismo, o null si no hay nada sonando (o falta el permiso). */
+  async fetchNowPlaying(accessToken) {
+    const res = await fetch(`${SPOTIFY_API_BASE}/me/player/currently-playing`, { headers: { Authorization: `Bearer ${accessToken}` } });
+    if (res.status === 204 || !res.ok) return null;
+    const d = await res.json().catch(() => null);
+    const t = d?.item;
+    if (!t || d.currently_playing_type !== "track") return null;
+    return {
+      name: t.name,
+      artist: (t.artists || []).map((a) => a.name).join(", "),
+      imageUrl: t.album?.images?.[0]?.url || null,
+      isPlaying: Boolean(d.is_playing),
+      progressMs: d.progress_ms ?? 0,
+      durationMs: t.duration_ms ?? 0,
     };
   }
 
