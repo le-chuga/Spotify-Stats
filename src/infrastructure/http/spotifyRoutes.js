@@ -6,6 +6,8 @@ import { getSession, saveSession, setSessionCookie } from "../session.js";
 
 export const spotifyRoutes = new Hono();
 
+const MAX_ARTISTS = 50;
+
 async function getAuthedUser(c) {
   const { id: sessionId, data } = await getSession(c);
   if (!data.accountId) return { sessionId, accountId: null, user: null, repo: null, spotify: null };
@@ -62,6 +64,23 @@ spotifyRoutes.get("/stats", async (c) => {
   }
 });
 
+// GET /api/spotify/search/artists?q=...
+spotifyRoutes.get("/search/artists", async (c) => {
+  const { accountId, user, repo, spotify } = await getAuthedUser(c);
+  if (!accountId) return c.json({ success: false, error: "No autenticado" }, 401);
+  if (!user?.spotifyTokens) return c.json({ success: false, error: "No tienes Spotify vinculado" }, 400);
+  const q = (c.req.query("q") || "").trim().slice(0, 100);
+  if (!q) return c.json({ success: true, artists: [] });
+  try {
+    const accessToken = await getFreshToken(user, repo, spotify, accountId);
+    return c.json({ success: true, artists: await spotify.searchArtists(accessToken, q) });
+  } catch (err) {
+    if (err?.status === 429) return c.json({ success: false, error: "Spotify está limitando las búsquedas. Espera unos segundos." }, 429);
+    if (err?.status === 401) return c.json({ success: false, error: "Tu sesión de Spotify ha caducado. Vuelve a conectar tu cuenta." }, 401);
+    return c.json({ success: false, error: "No se pudo buscar en Spotify." }, 400);
+  }
+});
+
 // POST /api/spotify/playlist
 spotifyRoutes.post("/playlist", async (c) => {
   const { accountId, user, repo, spotify } = await getAuthedUser(c);
@@ -69,19 +88,36 @@ spotifyRoutes.post("/playlist", async (c) => {
   if (!user?.spotifyTokens) return c.json({ success: false, error: "No tienes Spotify vinculado" }, 400);
   const { artistNames, playlistTitle } = await c.req.json().catch(() => ({}));
   if (!Array.isArray(artistNames) || artistNames.length === 0) return c.json({ success: false, error: "Selecciona al menos un artista" }, 400);
+  if (artistNames.length > MAX_ARTISTS || !artistNames.every((n) => typeof n === "string" && n.trim() && n.length <= 100)) {
+    return c.json({ success: false, error: `Elige entre 1 y ${MAX_ARTISTS} artistas` }, 400);
+  }
   try {
     const accessToken = await getFreshToken(user, repo, spotify, accountId);
-    const normalized = artistNames.map(n => n.toLowerCase().trim());
+    const wanted = artistNames.map((n) => ({ name: n.trim(), key: n.trim().toLowerCase() }));
     const likedSongs = await spotify.getAllLikedSongs(accessToken);
-    const matching = likedSongs.filter(t => t.artistNames.some(a => normalized.includes(a.toLowerCase().trim())));
-    if (!matching.length) return c.json({ success: false, error: "No encontramos canciones de esos artistas en tus Canciones que te gustan" }, 400);
-    const name = playlistTitle || "Frecuencia: " + artistNames.slice(0, 3).join(", ") + (artistNames.length > 3 ? ` +${artistNames.length - 3}` : "");
+    const hit = new Set();
+    const matching = likedSongs.filter((t) => {
+      let ok = false;
+      for (const a of t.artistNames) {
+        const key = a.toLowerCase().trim();
+        if (wanted.some((w) => w.key === key)) { hit.add(key); ok = true; }
+      }
+      return ok;
+    });
+    const missingArtists = wanted.filter((w) => !hit.has(w.key)).map((w) => w.name);
+    if (!matching.length) {
+      const who = wanted.map((w) => w.name).join(", ");
+      return c.json({ success: false, error: `No encontramos canciones de ${who} en tus Canciones que te gustan` }, 400);
+    }
+    const title = typeof playlistTitle === "string" ? playlistTitle.trim().slice(0, 100) : "";
+    const name = title || "Frecuencia: " + artistNames.slice(0, 3).join(", ") + (artistNames.length > 3 ? ` +${artistNames.length - 3}` : "");
     const playlistId = await spotify.createPlaylist(accessToken, name);
     await spotify.addTracksToPlaylist(accessToken, playlistId, matching.map(t => t.uri));
-    return c.json({ success: true, playlistName: name, trackCount: matching.length });
+    return c.json({ success: true, playlistName: name, trackCount: matching.length, missingArtists });
   } catch (err) {
     const status = err?.status;
     if (status === 403) return c.json({ success: false, error: "Spotify no permite crear playlists desde apps en modo desarrollo. Añade tu email en User Management del dashboard de Spotify." }, 400);
+    if (status === 429) return c.json({ success: false, error: "Spotify está limitando las peticiones. Espera un minuto e inténtalo de nuevo." }, 429);
     return c.json({ success: false, error: "No se pudo crear la playlist." }, 400);
   }
 });

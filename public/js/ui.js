@@ -201,6 +201,10 @@ export function renderSpotifyStats(stats) {
 const modalEls = {
   overlay: document.getElementById("playlist-modal-overlay"),
   artistList: document.getElementById("artist-select-list"),
+  chips: document.getElementById("artist-chips"),
+  search: document.getElementById("artist-pick-search"),
+  searchClear: document.getElementById("artist-pick-clear"),
+  heading: document.getElementById("artist-pick-heading"),
   titleInput: document.getElementById("playlist-title-input"),
   btnOpen: document.getElementById("btn-open-playlist-modal"),
   btnConfirm: document.getElementById("btn-confirm-playlist"),
@@ -212,47 +216,155 @@ const modalEls = {
   viewSuccess: document.getElementById("modal-view-success"),
 };
 
+/**
+ * Artistas elegidos (clave: nombre en minúsculas). Se conservan entre búsquedas,
+ * así se puede mezclar "mis más escuchados" con artistas buscados por nombre.
+ */
+const selected = new Map();
+const keyOf = (name) => name.trim().toLowerCase();
+let topArtists = [];
+let shownChipKeys = new Set();
+
+const X_ICON =
+  '<svg class="icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M205.66,194.34a8,8,0,0,1-11.32,11.32L128,139.31,61.66,205.66a8,8,0,0,1-11.32-11.32L116.69,128,50.34,61.66A8,8,0,0,1,61.66,50.34L128,116.69l66.34-66.35a8,8,0,0,1,11.32,11.32L139.31,128Z"/></svg>';
+
 export function showPlaylistButton(artists) {
   modalEls.btnOpen.hidden = false;
-  modalEls.btnOpen._artists = artists;
+  topArtists = artists;
+}
+
+/** Fila con casilla; la casilla y el chip de arriba son dos vistas de la misma selección. */
+function buildArtistOption(artist, subtitle) {
+  const key = keyOf(artist.name);
+  const li = document.createElement("li");
+  const label = document.createElement("label");
+  label.className = "artist-select-option";
+
+  const checkbox = document.createElement("input");
+  checkbox.type = "checkbox";
+  checkbox.value = artist.name;
+  checkbox.dataset.key = key;
+  checkbox.checked = selected.has(key);
+  checkbox.addEventListener("change", () => {
+    if (checkbox.checked) selected.set(key, { name: artist.name, imageUrl: artist.imageUrl || null });
+    else selected.delete(key);
+    renderChips();
+  });
+
+  const text = document.createElement("span");
+  text.className = "artist-select-option__text";
+  const name = document.createElement("span");
+  name.className = "artist-select-option__name";
+  name.textContent = artist.name;
+  text.appendChild(name);
+  if (subtitle) {
+    const sub = document.createElement("span");
+    sub.className = "artist-select-option__sub";
+    sub.textContent = subtitle;
+    text.appendChild(sub);
+  }
+
+  if (artist.imageUrl) {
+    const img = document.createElement("img");
+    img.src = artist.imageUrl;
+    img.alt = "";
+    img.loading = "lazy";
+    label.append(checkbox, img, text);
+  } else {
+    label.append(checkbox, text);
+  }
+  li.appendChild(label);
+  return li;
+}
+
+function renderChips() {
+  const items = [...selected.entries()];
+  modalEls.chips.hidden = items.length === 0;
+  const previous = shownChipKeys;
+  shownChipKeys = new Set(items.map(([key]) => key));
+
+  modalEls.chips.replaceChildren(
+    ...items.map(([key, artist], index) => {
+      const li = document.createElement("li");
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "chip" + (previous.has(key) ? "" : " chip--new"); // solo anima el que acaba de entrar
+      btn.setAttribute("aria-label", `Quitar a ${artist.name}`);
+
+      if (artist.imageUrl) {
+        const img = document.createElement("img");
+        img.src = artist.imageUrl;
+        img.alt = "";
+        btn.appendChild(img);
+      }
+      const name = document.createElement("span");
+      name.textContent = artist.name;
+      btn.appendChild(name);
+      btn.insertAdjacentHTML("beforeend", X_ICON);
+
+      btn.addEventListener("click", () => {
+        selected.delete(key);
+        const box = modalEls.artistList.querySelector(`input[data-key="${CSS.escape(key)}"]`);
+        if (box) box.checked = false;
+        renderChips();
+        // el foco no se pierde: pasa al chip vecino o, si ya no quedan, al buscador
+        const rest = modalEls.chips.querySelectorAll(".chip");
+        (rest[Math.min(index, rest.length - 1)] || modalEls.search).focus();
+      });
+      li.appendChild(btn);
+      return li;
+    })
+  );
+}
+
+/**
+ * Pinta la lista de artistas según el estado de la búsqueda.
+ * @param {{status:'idle'}|{status:'loading',query:string}|{status:'results',query:string,artists:object[]}
+ *   |{status:'empty',query:string}|{status:'error',message:string}} state
+ */
+export function showArtistSearch(state) {
+  const { heading, artistList } = modalEls;
+  heading.classList.toggle("pick-heading--error", state.status === "error");
+  artistList.classList.toggle("is-loading", state.status === "loading");
+  artistList.setAttribute("aria-busy", String(state.status === "loading"));
+
+  if (state.status === "loading") {
+    heading.textContent = `Buscando «${state.query}»…`;
+    return; // se mantiene la lista anterior, atenuada, para que no parpadee
+  }
+
+  let rows = [];
+  if (state.status === "idle") {
+    heading.textContent = topArtists.length ? "Tus artistas más escuchados" : "Busca un artista para empezar";
+    rows = topArtists.map((a) => buildArtistOption(a));
+  } else if (state.status === "results") {
+    heading.textContent = `Resultados para «${state.query}»`;
+    rows = state.artists.map((a) => buildArtistOption(a, a.genres?.join(", ")));
+  } else if (state.status === "empty") {
+    heading.textContent = `No encontramos ningún artista llamado «${state.query}»`;
+  } else if (state.status === "error") {
+    heading.textContent = state.message;
+  }
+  artistList.replaceChildren(...rows);
+  artistList.scrollTop = 0;
 }
 
 export function openPlaylistModal() {
-  const artists = modalEls.btnOpen._artists || [];
-  modalEls.artistList.innerHTML = "";
+  selected.clear();
+  shownChipKeys = new Set();
+  modalEls.search.value = "";
+  modalEls.searchClear.hidden = true;
   modalEls.error.textContent = "";
   modalEls.error.classList.remove("visible");
   modalEls.titleInput.value = "";
   modalEls.viewSelect.hidden = false;
   modalEls.viewSuccess.hidden = true;
-
-  artists.forEach((artist) => {
-    const li = document.createElement("li");
-    const label = document.createElement("label");
-    label.className = "artist-select-option";
-
-    const checkbox = document.createElement("input");
-    checkbox.type = "checkbox";
-    checkbox.value = artist.name;
-
-    const name = document.createElement("span");
-    name.textContent = artist.name;
-
-    if (artist.imageUrl) {
-      const img = document.createElement("img");
-      img.src = artist.imageUrl;
-      img.alt = "";
-      img.loading = "lazy";
-      label.append(checkbox, img, name);
-    } else {
-      label.append(checkbox, name);
-    }
-    li.appendChild(label);
-    modalEls.artistList.appendChild(li);
-  });
+  renderChips();
+  showArtistSearch({ status: "idle" });
 
   modalEls.overlay.hidden = false;
-  setTimeout(() => modalEls.titleInput.focus(), 100);
+  // En móvil, enfocar abriría el teclado encima de la lista: solo se enfoca con ratón.
+  if (window.matchMedia("(pointer: fine)").matches) setTimeout(() => modalEls.search.focus(), 100);
 }
 
 export function closePlaylistModal() {
@@ -260,8 +372,7 @@ export function closePlaylistModal() {
 }
 
 export function getSelectedArtists() {
-  return [...modalEls.artistList.querySelectorAll("input[type='checkbox']:checked")]
-    .map((cb) => cb.value);
+  return [...selected.values()].map((a) => a.name);
 }
 
 export function getPlaylistTitle() {

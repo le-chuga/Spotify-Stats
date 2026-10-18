@@ -67,6 +67,9 @@ export const api = {
   spotifyStats() {
     return getJson("/spotify/stats");
   },
+  searchArtists(query) {
+    return getJson(`/spotify/search/artists?q=${encodeURIComponent(query)}`);
+  },
   createPlaylist(artistNames, playlistTitle) {
     return postJson("/spotify/playlist", { artistNames, playlistTitle });
   },

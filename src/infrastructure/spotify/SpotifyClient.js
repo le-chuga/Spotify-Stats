@@ -93,14 +93,40 @@ export class SpotifyClient {
     let url = `${SPOTIFY_API_BASE}/me/tracks?limit=50`;
     while (url) {
       const res = await fetch(url, { headers: h });
+      if (!res.ok) throw new SpotifyApiError(res.status);
       const data = await res.json();
       for (const item of (data.items || [])) {
-        if (!item.track) continue;
-        tracks.push({ uri: item.track.uri, name: item.track.name, artistNames: item.track.artists.map(a => a.name) });
+        const t = item.track ?? item.item;
+        if (!t) continue;
+        tracks.push({ uri: t.uri, name: t.name, artistNames: (t.artists || []).map(a => a.name) });
       }
       url = data.next || null;
     }
     return tracks;
+  }
+
+  /**
+   * Busca artistas por nombre (máximo 10: es el tope de Spotify para apps en modo desarrollo).
+   * Devuelve nombre, foto pequeña y hasta 2 géneros para distinguir artistas con el mismo nombre.
+   */
+  async searchArtists(accessToken, query) {
+    const params = new URLSearchParams({ q: query, type: "artist", limit: "10" });
+    const res = await fetch(`${SPOTIFY_API_BASE}/search?${params}`, { headers: { Authorization: `Bearer ${accessToken}` } });
+    if (!res.ok) throw new SpotifyApiError(res.status);
+    const data = await res.json();
+    const seen = new Set();
+    const artists = [];
+    for (const a of data.artists?.items || []) {
+      if (!a?.id || !a.name) continue;
+      const key = a.name.trim().toLowerCase();
+      if (seen.has(key)) continue; // la playlist se arma por nombre: dos con el mismo nombre serían una sola opción
+      seen.add(key);
+      // las fotos vienen de mayor a menor: nos vale la más pequeña que aún se ve nítida a 40 px
+      const imgs = (a.images || []).filter((i) => i?.url);
+      const small = [...imgs].reverse().find((i) => (i.width || 0) >= 80) || imgs[imgs.length - 1];
+      artists.push({ id: a.id, name: a.name, imageUrl: small?.url || null, genres: (a.genres || []).slice(0, 2) });
+    }
+    return artists;
   }
 
   async createPlaylist(accessToken, name, description = "Creada por Frecuencia") {
