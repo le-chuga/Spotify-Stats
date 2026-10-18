@@ -11,6 +11,31 @@ const newCode = () =>
     .map((b) => b.toString(16).padStart(2, "0"))
     .join("");
 
+// Las tablas se crean al primer uso: así el enlace funciona aunque no se haya ejecutado la migración.
+let schemaReady = null;
+function ensureSchema(db) {
+  schemaReady ??= db
+    .batch([
+      db.prepare("CREATE TABLE IF NOT EXISTS friend_invites (code TEXT PRIMARY KEY, account_id TEXT UNIQUE NOT NULL, created_at TEXT DEFAULT (datetime('now')))"),
+      db.prepare("CREATE TABLE IF NOT EXISTS friendships (account_id TEXT NOT NULL, friend_id TEXT NOT NULL, created_at TEXT DEFAULT (datetime('now')), PRIMARY KEY (account_id, friend_id))"),
+    ])
+    .catch((err) => {
+      schemaReady = null;
+      throw err;
+    });
+  return schemaReady;
+}
+
+friendRoutes.use("*", async (c, next) => {
+  try {
+    await ensureSchema(c.env.DB);
+  } catch (err) {
+    console.error("[Friends] schema", err?.message);
+    return c.json({ success: false, error: "No se pudo preparar la base de datos." }, 500);
+  }
+  await next();
+});
+
 async function authed(c) {
   const { data } = await getSession(c);
   return data.accountId || null;

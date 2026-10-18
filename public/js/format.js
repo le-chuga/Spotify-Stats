@@ -1,5 +1,5 @@
 /**
- * format.js — Utilidades de formato compartidas por la app y la página pública.
+ * format.js: Utilidades de formato compartidas por la app y la página pública.
  */
 
 const rtf = new Intl.RelativeTimeFormat("es", { numeric: "auto" });

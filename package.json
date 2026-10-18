@@ -9,7 +9,9 @@
     "db:create": "wrangler d1 create frecuencia-db",
     "db:migrate": "wrangler d1 execute frecuencia-db --file=schema.sql",
     "db:migrate:remote": "wrangler d1 execute frecuencia-db --remote --file=schema.sql",
-    "kv:create": "wrangler kv namespace create SESSIONS"
+    "kv:create": "wrangler kv namespace create SESSIONS",
+    "check:launch": "node scripts/check-launch.mjs",
+    "predeploy": "npm run check:launch"
   },
   "dependencies": {
     "hono": "4.13.11"

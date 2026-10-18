@@ -26,6 +26,7 @@ shareRoutes.post("/", async (c) => {
 
   try {
     const stats = await spotify.fetchListeningStats(accessToken);
+    delete stats.profile.email; // el enlace es público: el email no se guarda
     const id = Array.from(crypto.getRandomValues(new Uint8Array(8)))
       .map(b => b.toString(16).padStart(2, "0")).join("");
     const snapshotRepo = new D1SnapshotRepository(c.env.DB);

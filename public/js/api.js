@@ -63,8 +63,11 @@ async function deleteJson(path) {
 }
 
 export const api = {
-  register(accountId, password) {
-    return postJson("/auth/register", { accountId, password });
+  register(accountId, password, acceptTerms) {
+    return postJson("/auth/register", { accountId, password, acceptTerms });
+  },
+  deleteAccount(password) {
+    return postJson("/auth/delete", { password });
   },
   login(accountId, password) {
     return postJson("/auth/login", { accountId, password });

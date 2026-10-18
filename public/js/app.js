@@ -8,6 +8,8 @@ import { api } from "./api.js";
 import * as ui from "./ui.js";
 import { openCommonModal } from "./common.js";
 import { openFriendsModal, checkPendingInvite } from "./friends.js";
+import { openAccountModal } from "./account.js";
+import "./a11y.js";
 
 /* ----------------------------------------------------------
    1) Comprobar al cargar si ya hay sesión / Spotify vinculado
@@ -106,8 +108,16 @@ ui.elements.formRegister.addEventListener("submit", async (e) => {
   e.preventDefault();
   ui.clearAuthMessages();
 
-  const { accountId, password } = ui.getRegisterValues();
-  const { ok, data } = await api.register(accountId, password);
+  const { accountId, password, acceptTerms } = ui.getRegisterValues();
+  if (!acceptTerms) {
+    ui.showRegisterConsentError("Debes aceptar los términos y la política de privacidad para crear la cuenta.");
+    return;
+  }
+  if (password.length < 8) {
+    ui.showRegisterError("La contraseña debe tener al menos 8 caracteres");
+    return;
+  }
+  const { ok, data } = await api.register(accountId, password, acceptTerms);
 
   if (!ok) {
     ui.showRegisterError(data.error || "No se pudo crear la cuenta");
@@ -395,7 +405,7 @@ async function openShareModal() {
     text: shareUrl,
     width: 180,
     height: 180,
-    colorDark: "#1B1340",
+    colorDark: "#181a1b",
     colorLight: "#ffffff",
   });
 
@@ -471,6 +481,11 @@ document.getElementById("btn-share-panel").addEventListener("click", openShareMo
 document.getElementById("btn-common-panel").addEventListener("click", () => {
   closePanel("side-panel", "side-panel-overlay");
   openCommonModal();
+});
+
+document.getElementById("btn-account-panel").addEventListener("click", () => {
+  closePanel("side-panel", "side-panel-overlay");
+  openAccountModal();
 });
 
 document.getElementById("btn-friends-panel").addEventListener("click", () => {

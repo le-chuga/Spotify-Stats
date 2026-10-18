@@ -1,5 +1,5 @@
 /**
- * list-item.js — Filas de las listas de estadísticas.
+ * list-item.js: Filas de las listas de estadísticas.
  * Compartido por la app (ui.js) y la página pública (share.js).
  * Todo el texto entra por textContent: nada de HTML construido con datos de usuario.
  */

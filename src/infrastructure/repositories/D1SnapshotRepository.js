@@ -18,9 +18,14 @@ export class D1SnapshotRepository {
     return {
       id: row.id,
       accountId: row.account_id,
-      stats: JSON.parse(row.stats_json),
+      stats: stripEmail(JSON.parse(row.stats_json)), // snapshots antiguas pueden traer el email
       avatarBase64: row.avatar_base64 || null,
       createdAt: row.created_at,
     };
   }
+}
+
+function stripEmail(stats) {
+  if (stats?.profile) delete stats.profile.email;
+  return stats;
 }

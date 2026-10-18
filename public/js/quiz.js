@@ -1,8 +1,7 @@
 /**
- * quiz.js — Lógica del modo "Guess the Song"
+ * quiz.js: Lógica del modo "Adivina la canción"
  * - Fotos de artistas: Deezer API (fotos reales de artistas, sin API key)
  * - Previews de audio: iTunes Search API (30s, gratuito)
- * - Fondo animado: álbumes rotativos con fade cada 3 segundos
  */
 
 // ═══════════════════════════════════════════════════════
@@ -16,93 +15,6 @@ let startTime = 0;
 let elapsedMs = 0;
 let correctCount = 0;
 let currentAudio = null;
-
-// ═══════════════════════════════════════════════════════
-//  FONDO ANIMADO: álbumes rotativos con fade cada 3s
-// ═══════════════════════════════════════════════════════
-const BACKGROUND_ARTISTS = [
-  "Taylor Swift", "Bad Bunny", "Drake", "The Weeknd", "Billie Eilish",
-  "Kendrick Lamar", "Doja Cat", "Post Malone", "Ariana Grande",
-  "Harry Styles", "SZA", "Olivia Rodrigo", "Travis Scott",
-  "Metro Boomin","Carolina Durante",
-  "Las Petunias","C Tangana","Rosalía","Bad Gyal",
-  "Tyler, The Creator","J Balvin","Shakira","Daddy Yankee",
-  "The Marias ","Glass Animals","Tame Impala","Arctic Monkeys","The Strokes","Foo Fighters","Red Hot Chili Peppers",
-
-];
-
-async function loadSearchBackground() {
-  const bg = document.getElementById("search-bg");
-  const CELLS = 15;
-  const albumUrls = [];
-  const cells = [];
-
-  // Las celdas existen desde el primer instante; las portadas se pintan según llegan
-  for (let i = 0; i < CELLS; i++) {
-    const div = document.createElement("div");
-    div.className = "bg-cell";
-    const img = document.createElement("img");
-    img.className = "bg-img";
-    img.alt = "";
-    img.style.opacity = "0";
-    div.appendChild(img);
-    bg.appendChild(div);
-    cells.push({ img, filled: false });
-  }
-
-  function showCover(cell, url, fast) {
-    if (fast) cell.img.style.transition = "opacity 0.4s ease";
-    cell.img.addEventListener(
-      "load",
-      () => {
-        cell.img.style.opacity = "1";
-        if (fast) setTimeout(() => (cell.img.style.transition = ""), 450);
-      },
-      { once: true }
-    );
-    cell.img.src = url;
-  }
-
-  function fillPending() {
-    for (const cell of cells) {
-      if (cell.filled || albumUrls.length === 0) continue;
-      cell.filled = true;
-      showCover(cell, albumUrls[Math.floor(Math.random() * albumUrls.length)], true);
-    }
-  }
-
-  // Todas las peticiones a iTunes a la vez (antes iban una detrás de otra)
-  const names = shuffle(BACKGROUND_ARTISTS.map((n) => n.trim()));
-  await Promise.allSettled(
-    names.map(async (name) => {
-      try {
-        const res = await fetch(
-          `https://itunes.apple.com/search?term=${encodeURIComponent(name)}&entity=song&limit=3`
-        );
-        const data = await res.json();
-        data.results
-          .filter((r) => r.wrapperType === "track" && r.artworkUrl100)
-          .forEach((r) => albumUrls.push(r.artworkUrl100.replace("100x100", "400x400")));
-        fillPending();
-      } catch { /* ignorar */ }
-    })
-  );
-
-  if (!albumUrls.length) return;
-  fillPending();
-
-  // Cada celda cambia de portada cada 4 s (fade de 1,5 s), con desfase aleatorio
-  cells.forEach((cell) => {
-    setTimeout(() => {
-      setInterval(() => {
-        cell.img.style.opacity = "0";
-        setTimeout(() => {
-          showCover(cell, albumUrls[Math.floor(Math.random() * albumUrls.length)], false);
-        }, 1500);
-      }, 4000);
-    }, Math.random() * 4000);
-  });
-}
 
 // ═══════════════════════════════════════════════════════
 //  BÚSQUEDA DE ARTISTAS
@@ -386,7 +298,7 @@ function showLeaderboard(leaderboard) {
   document.getElementById("lb-my-sub").textContent =
     correctCount === 10
       ? "¡10/10 correctas!"
-      : `${correctCount}/10 correctas — necesitas 10/10 para entrar en el top`;
+      : `${correctCount}/10 correctas. Necesitas 10/10 para entrar en el top`;
 
   const tbody = document.getElementById("lb-body");
   tbody.replaceChildren();
@@ -445,4 +357,4 @@ function shuffle(arr) {
   return a;
 }
 
-loadSearchBackground();
+

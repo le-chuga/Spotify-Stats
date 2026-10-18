@@ -4,9 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content" />
   <meta name="color-scheme" content="light dark" />
-  <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f7f6fb" />
-  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#14102b" />
+  <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f6f5f1" />
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#121414" />
   <meta name="description" content="Estadísticas de escucha compartidas desde Frecuencia." />
+  <meta name="robots" content="noindex, nofollow" />
   <title>Estadísticas compartidas en Frecuencia</title>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   <link rel="preload" href="/fonts/unbounded-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin />
@@ -14,6 +15,7 @@
   <link rel="stylesheet" href="/css/styles.css" />
 </head>
 <body>
+  <a class="skip-link" id="skip-link" href="#">Saltar al contenido</a>
   <header class="share-bar">
     <a class="wordmark-link" href="/">Frecuencia</a>
   </header>
@@ -22,6 +24,18 @@
     <p class="share-loading" id="loading-msg" role="status">Cargando estadísticas…</p>
   </main>
 
+  <footer class="site-footer">
+    <nav aria-label="Información legal">
+      <ul>
+        <li><a href="/privacidad">Privacidad</a></li>
+        <li><a href="/cookies">Cookies</a></li>
+        <li><a href="/terminos">Términos y condiciones</a></li>
+      </ul>
+    </nav>
+    <p>Frecuencia es un proyecto independiente y no está afiliado a Spotify AB. Esta página la ha generado una persona usuaria al compartir sus estadísticas.</p>
+  </footer>
+
+  <script type="module" src="/js/a11y.js"></script>
   <script type="module" src="/js/share.js"></script>
 </body>
 </html>

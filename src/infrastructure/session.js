@@ -37,9 +37,11 @@ export async function destroySession(c, sessionId) {
 }
 
 export function setSessionCookie(c, sessionId) {
-  c.header("Set-Cookie", `sid=${sessionId}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${SESSION_TTL}`);
+  const secure = new URL(c.req.url).protocol === "https:" ? "; Secure" : "";
+  c.header("Set-Cookie", `sid=${sessionId}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${SESSION_TTL}${secure}`);
 }
 
 export function clearSessionCookie(c) {
-  c.header("Set-Cookie", "sid=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0");
+  const secure = new URL(c.req.url).protocol === "https:" ? "; Secure" : "";
+  c.header("Set-Cookie", `sid=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0${secure}`);
 }

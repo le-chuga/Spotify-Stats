@@ -45,6 +45,8 @@ const els = {
 
   registerId: document.getElementById("register-id"),
   registerPassword: document.getElementById("register-password"),
+  registerConsent: document.getElementById("register-consent"),
+  errorRegisterConsent: document.getElementById("error-register-consent"),
   errorRegisterId: document.getElementById("error-register-id"),
   errorRegisterPassword: document.getElementById("error-register-password"),
   formErrorRegister: document.getElementById("form-error-register"),
@@ -63,6 +65,7 @@ export function clearAuthMessages() {
     els.errorLoginPassword,
     els.errorRegisterId,
     els.errorRegisterPassword,
+    els.errorRegisterConsent,
   ].forEach((el) => (el.textContent = ""));
 
   [els.formErrorLogin, els.formErrorRegister].forEach((el) => {
@@ -133,12 +136,22 @@ export function getLoginValues() {
 }
 
 export function getRegisterValues() {
-  return { accountId: els.registerId.value, password: els.registerPassword.value };
+  return {
+    accountId: els.registerId.value,
+    password: els.registerPassword.value,
+    acceptTerms: els.registerConsent.checked,
+  };
 }
 
 export function resetRegisterForm() {
   els.registerId.value = "";
   els.registerPassword.value = "";
+  els.registerConsent.checked = false;
+}
+
+export function showRegisterConsentError(message) {
+  els.errorRegisterConsent.textContent = message;
+  els.registerConsent.focus();
 }
 
 export function showSpotifyLinkError(message) {

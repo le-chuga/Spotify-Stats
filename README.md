@@ -136,3 +136,14 @@ vez (la app muestra el botón "Volver a conectar Spotify" cuando hace falta).
   campos a 16 px (iOS no hace zoom) y `:hover` solo con puntero fino.
 - **Seguridad:** el nombre de Spotify, el Id de usuario y la foto se pintan con `textContent`,
   nunca como HTML, y el servidor solo acepta fotos en formato `data:image/...;base64`.
+
+
+## Antes de publicar (lista de lanzamiento)
+
+`npm run check:launch` revisa esta lista y se ejecuta solo antes de `npm run deploy`. Falla mientras quede algo pendiente.
+
+1. Los datos del titular (apodo y correo de contacto) ya están en `privacidad.html` y `terminos.html`. Si cambian, edita esos archivos.
+2. Conecta un dominio propio (Cloudflare, Workers, Settings, Domains & Routes) y actualiza `SPOTIFY_REDIRECT_URI` en `wrangler.toml` y en el panel de desarrolladores de Spotify.
+3. Ejecuta las migraciones: `npm run db:migrate:remote`. Las tablas de amigos se crean solas si faltan, pero conviene tenerlas en el esquema.
+4. Spotify: una app en modo desarrollo solo admite usuarios que añadas a mano en el panel. Para abrirla al público hay que pedir una extensión de cuota a Spotify.
+5. Revisa los límites de peticiones del plan de Cloudflare y activa una regla de limitación de intentos en `/api/auth/login`.

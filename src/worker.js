@@ -14,6 +14,31 @@ import { deezerRoutes } from "./infrastructure/http/deezerRoutes.js";
 
 const app = new Hono();
 
+// Cabeceras de seguridad. Las imágenes y el audio vienen de Spotify, Deezer y Apple (previews del quiz).
+const CSP = [
+  "default-src 'self'",
+  "script-src 'self'",
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data: https:",
+  "media-src 'self' https:",
+  "font-src 'self'",
+  "connect-src 'self' https://itunes.apple.com",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+  "frame-ancestors 'none'",
+].join("; ");
+
+app.use("*", async (c, next) => {
+  await next();
+  const res = new Response(c.res.body, c.res); // las respuestas de ASSETS tienen cabeceras inmutables
+  res.headers.set("Content-Security-Policy", CSP);
+  res.headers.set("X-Content-Type-Options", "nosniff");
+  res.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+  res.headers.set("Permissions-Policy", "camera=(), microphone=(), geolocation=(), payment=()");
+  c.res = res;
+});
+
 // ── Rutas API ──────────────────────────────────────────
 app.route("/api/auth", authRoutes);
 app.route("/api/spotify", spotifyRoutes);
@@ -28,6 +53,8 @@ app.get("/api/server-info", (c) => {
   const url = new URL(c.req.url);
   return c.json({ ip: url.hostname, port: 443 });
 });
+
+app.get("/favicon.ico", (c) => c.redirect("/favicon.svg", 301));
 
 // ── SPA: rutas especiales que sirven HTML ──────────────
 app.get("/share/:id", async (c) => {

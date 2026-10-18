@@ -4,17 +4,18 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content" />
   <meta name="color-scheme" content="light dark" />
-  <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f2f8f6" />
-  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#08191a" />
+  <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f6f5f1" />
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#121414" />
   <meta name="description" content="Frecuencia: tus canciones y artistas más escuchados de Spotify, un quiz para adivinar canciones y enlaces para compartir tus estadísticas." />
   <title>Frecuencia: tus estadísticas de escucha</title>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   <link rel="preload" href="/fonts/unbounded-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="preload" href="/fonts/instrument-sans-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="stylesheet" href="/css/styles.css" />
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
+  <script src="/vendor/qrcode.min.js" defer></script>
 </head>
 <body>
+  <a class="skip-link" id="skip-link" href="#">Saltar al contenido</a>
   <noscript>Frecuencia necesita JavaScript para funcionar. Actívalo en tu navegador y recarga la página.</noscript>
 
   <!-- ============ Iniciar sesión / crear cuenta ============ -->
@@ -67,8 +68,16 @@
 
           <div class="field">
             <label for="register-password">Elige una contraseña</label>
-            <input type="password" id="register-password" name="password" autocomplete="new-password" enterkeyhint="go" placeholder="mínimo 4 caracteres" />
+            <input type="password" id="register-password" name="password" autocomplete="new-password" enterkeyhint="go" placeholder="mínimo 8 caracteres" />
             <p class="field-error" id="error-register-password" role="alert"></p>
+          </div>
+
+          <div class="field">
+            <div class="check">
+              <input type="checkbox" id="register-consent" name="acceptTerms" aria-describedby="error-register-consent" />
+              <label for="register-consent">Tengo 14 años o más y acepto los <a href="/terminos" target="_blank" rel="noopener">términos y condiciones</a> y la <a href="/privacidad" target="_blank" rel="noopener">política de privacidad</a>.</label>
+            </div>
+            <p class="field-error" id="error-register-consent" role="alert"></p>
           </div>
 
           <p class="form-error" id="form-error-register" role="alert"></p>
@@ -81,6 +90,12 @@
         </form>
 
         <p class="auth-note" id="spotify-link-error" role="alert"></p>
+
+        <nav class="legal-links" aria-label="Información legal">
+          <a href="/privacidad">Privacidad</a>
+          <a href="/cookies">Cookies</a>
+          <a href="/terminos">Términos y condiciones</a>
+        </nav>
       </div>
     </section>
   </main>
@@ -95,15 +110,22 @@
     <section class="panel">
       <div class="panel-inner">
         <h2 class="panel-title">Conecta tu cuenta de Spotify</h2>
-        <p class="panel-lead">Leeremos tus canciones más repetidas, tus artistas favoritos y lo último que has escuchado.</p>
+        <p class="panel-lead">Al conectar, Spotify te pedirá permiso para que Frecuencia lea tus canciones y artistas más escuchados, lo último que has reproducido, tus canciones guardadas y tus playlists, y para que cree playlists en tu cuenta.</p>
+        <p class="note" style="margin-top:1rem">Guardamos solo las claves de acceso que Spotify nos da. Puedes quitar el permiso cuando quieras desde la configuración de tu cuenta de Spotify. <a href="/privacidad">Más información</a>.</p>
 
         <div class="stack">
           <a href="/api/spotify/login" id="btn-connect-spotify" class="btn btn--primary btn--lg btn--block">
             <svg class="icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm31.07,145.74a8,8,0,0,1-10.81,3.33,42.79,42.79,0,0,0-40.52,0,8,8,0,0,1-7.48-14.14,59.33,59.33,0,0,1,55.48,0A8,8,0,0,1,159.07,169.74Zm16-28a8,8,0,0,1-10.82,3.3,77.07,77.07,0,0,0-72.48,0,8,8,0,0,1-7.52-14.12,93,93,0,0,1,87.52,0A8,8,0,0,1,175.06,141.76Zm16-28a8,8,0,0,1-10.83,3.29,110.62,110.62,0,0,0-104.46,0,8,8,0,0,1-7.54-14.12,126.67,126.67,0,0,1,119.54,0A8,8,0,0,1,191.06,113.76Z"/></svg> Conectar con Spotify
           </a>
-          <button id="btn-skip-connect" class="btn btn--outline btn--block">Continuar sin conectar</button>
+          <button id="btn-skip-connect" class="btn btn--outline btn--block">Continuar sin conectar Spotify</button>
           <button id="btn-logout-connect" class="btn btn--text">Cerrar sesión</button>
         </div>
+
+        <nav class="legal-links" aria-label="Información legal">
+          <a href="/privacidad">Privacidad</a>
+          <a href="/cookies">Cookies</a>
+          <a href="/terminos">Términos y condiciones</a>
+        </nav>
       </div>
     </section>
   </main>
@@ -129,7 +151,7 @@
 
         <div class="identity-text">
           <p class="kicker">Estadísticas de escucha</p>
-          <h1 class="display-name" id="stats-display-name">—</h1>
+          <h1 class="display-name" id="stats-display-name">Tu perfil</h1>
           <p class="followers" id="profile-meta"></p>
         </div>
       </div>
@@ -163,7 +185,7 @@
 
   <!-- ============ Menú lateral ============ -->
   <div id="side-panel-overlay" class="scrim" hidden></div>
-  <aside id="side-panel" class="drawer" aria-label="Menú" hidden>
+  <aside id="side-panel" class="drawer" role="dialog" aria-modal="true" aria-label="Menú" hidden>
     <div class="drawer-head">
       <p class="drawer-title">Menú</p>
       <button id="btn-close-panel" class="icon-btn" aria-label="Cerrar menú"><svg class="icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M205.66,194.34a8,8,0,0,1-11.32,11.32L128,139.31,61.66,205.66a8,8,0,0,1-11.32-11.32L116.69,128,50.34,61.66A8,8,0,0,1,61.66,50.34L128,116.69l66.34-66.35a8,8,0,0,1,11.32,11.32L139.31,128Z"/></svg></button>
@@ -173,6 +195,11 @@
       <button id="btn-quizzes-panel" class="drawer-item"><svg class="icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M201.89,54.66A103.43,103.43,0,0,0,128.79,24H128A104,104,0,0,0,24,128v56a24,24,0,0,0,24,24H64a24,24,0,0,0,24-24V144a24,24,0,0,0-24-24H40.36A88,88,0,0,1,128,40h.67a87.71,87.71,0,0,1,87,80H192a24,24,0,0,0-24,24v40a24,24,0,0,0,24,24h16a24,24,0,0,0,24-24V128A103.41,103.41,0,0,0,201.89,54.66ZM64,136a8,8,0,0,1,8,8v40a8,8,0,0,1-8,8H48a8,8,0,0,1-8-8V136Zm152,48a8,8,0,0,1-8,8H192a8,8,0,0,1-8-8V144a8,8,0,0,1,8-8h24Z"/></svg> Quizzes</button>
       <button id="btn-common-panel" class="drawer-item"><svg class="icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M174.63,81.37a80,80,0,1,0-93.26,93.26,80,80,0,1,0,93.26-93.26ZM100.69,136,120,155.31A63.48,63.48,0,0,1,96,160,63.48,63.48,0,0,1,100.69,136Zm33.75,11.13-25.57-25.57a64.65,64.65,0,0,1,12.69-12.69l25.57,25.57A64.65,64.65,0,0,1,134.44,147.13ZM155.31,120,136,100.69A63.48,63.48,0,0,1,160,96,63.48,63.48,0,0,1,155.31,120ZM32,96a64,64,0,0,1,126-16A80.08,80.08,0,0,0,80.05,158,64.11,64.11,0,0,1,32,96ZM160,224A64.11,64.11,0,0,1,98,176,80.08,80.08,0,0,0,176,98,64,64,0,0,1,160,224Z"/></svg> Canciones en común</button>
       <button id="btn-friends-panel" class="drawer-item"><svg class="icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M117.25,157.92a60,60,0,1,0-66.5,0A95.83,95.83,0,0,0,3.53,195.63a8,8,0,1,0,13.4,8.74,80,80,0,0,1,134.14,0,8,8,0,0,0,13.4-8.74A95.83,95.83,0,0,0,117.25,157.92ZM40,108a44,44,0,1,1,44,44A44.05,44.05,0,0,1,40,108Zm210.14,98.7a8,8,0,0,1-11.07-2.33A79.83,79.83,0,0,0,172,168a8,8,0,0,1,0-16,44,44,0,1,0-16.34-84.87,8,8,0,1,1-5.94-14.85,60,60,0,0,1,55.53,105.64,95.83,95.83,0,0,1,47.22,37.71A8,8,0,0,1,250.14,206.7Z"/></svg> Top con amigos</button>
+      <button id="btn-account-panel" class="drawer-item"><svg class="icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M230.92,212c-15.23-26.33-38.7-45.21-66.09-54.16a72,72,0,1,0-73.66,0C63.78,166.78,40.31,185.66,25.08,212a8,8,0,1,0,13.85,8c18.84-32.56,52.14-52,89.07-52s70.23,19.44,89.07,52a8,8,0,1,0,13.85-8ZM72,96a56,56,0,1,1,56,56A56.06,56.06,0,0,1,72,96Z"/></svg> Mis datos y cuenta</button>
+      <hr class="drawer-sep" />
+      <a class="drawer-item drawer-item--quiet" href="/privacidad">Privacidad</a>
+      <a class="drawer-item drawer-item--quiet" href="/cookies">Cookies</a>
+      <a class="drawer-item drawer-item--quiet" href="/terminos">Términos y condiciones</a>
       <button id="btn-logout-stats" class="drawer-item drawer-item--danger"><svg class="icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M120,216a8,8,0,0,1-8,8H48a8,8,0,0,1-8-8V40a8,8,0,0,1,8-8h64a8,8,0,0,1,0,16H56V208h56A8,8,0,0,1,120,216Zm109.66-93.66-40-40a8,8,0,0,0-11.32,11.32L204.69,120H112a8,8,0,0,0,0,16h92.69l-26.35,26.34a8,8,0,0,0,11.32,11.32l40-40A8,8,0,0,0,229.66,122.34Z"/></svg> Cerrar sesión</button>
     </nav>
   </aside>
@@ -359,6 +386,37 @@
     </div>
   </div>
 
+  <!-- ============ Modal: mis datos y cuenta ============ -->
+  <div id="account-modal-overlay" class="modal" hidden>
+    <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="account-title">
+      <div class="sheet-view">
+        <div>
+          <h2 id="account-title" class="sheet-title">Mis datos y cuenta</h2>
+          <p class="muted">Aquí puedes descargar lo que Frecuencia guarda sobre ti o borrar tu cuenta.</p>
+        </div>
+
+        <a class="btn btn--outline" href="/api/auth/export" download="frecuencia-mis-datos.json">Descargar mis datos (JSON)</a>
+
+        <p class="hint">Para quitar el permiso de Frecuencia en Spotify, entra en la <a href="https://www.spotify.com/account/apps/" target="_blank" rel="noopener">configuración de aplicaciones de tu cuenta de Spotify</a>.</p>
+
+        <form id="account-delete-form" class="sheet-view" novalidate>
+          <input type="text" name="username" autocomplete="username" tabindex="-1" aria-hidden="true" hidden />
+          <h3 class="block-title">Borrar mi cuenta</h3>
+          <p class="muted">Se eliminarán tu cuenta, tu foto, tus resultados del quiz, tus enlaces compartidos, tus amistades y las claves de Spotify. No se puede deshacer.</p>
+          <div class="field">
+            <label for="account-delete-password">Escribe tu contraseña para confirmar</label>
+            <input type="password" id="account-delete-password" autocomplete="current-password" />
+          </div>
+          <p class="form-error" id="account-delete-error" role="alert"></p>
+          <div class="actions">
+            <button type="submit" id="btn-account-delete" class="btn btn--danger">Borrar mi cuenta definitivamente</button>
+            <button type="button" id="btn-account-close" class="btn btn--text">Cerrar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
   <!-- ============ Modal: compartir (QR y enlace) ============ -->
   <div id="share-modal-overlay" class="modal" hidden>
     <div class="sheet" role="dialog" aria-modal="true" aria-label="Compartir estadísticas">
@@ -374,7 +432,7 @@
           <p class="muted">Comparte este enlace o el QR para que tus amigos vean tus estadísticas.</p>
         </div>
 
-        <div id="share-qr" class="share-qr-box"></div>
+        <div id="share-qr" class="share-qr-box" role="img" aria-label="Código QR con el enlace para ver tus estadísticas"></div>
 
         <div>
           <div class="share-link-box">
@@ -417,6 +475,17 @@
       </div>
     </div>
   </div>
+
+  <footer class="site-footer">
+    <nav aria-label="Información legal">
+      <ul>
+        <li><a href="/privacidad">Privacidad</a></li>
+        <li><a href="/cookies">Cookies</a></li>
+        <li><a href="/terminos">Términos y condiciones</a></li>
+      </ul>
+    </nav>
+    <p>Frecuencia es un proyecto independiente y no está afiliado a Spotify AB. Spotify es una marca de Spotify AB.</p>
+  </footer>
 
   <script type="module" src="/js/app.js"></script>
 </body>

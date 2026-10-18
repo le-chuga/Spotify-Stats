@@ -1,5 +1,5 @@
 /**
- * share.js — Página pública de una snapshot compartida.
+ * share.js: Página pública de una snapshot compartida.
  * Pinta los datos con textContent / createElement: el nombre de Spotify
  * y la foto los controla cada usuario y nunca se interpretan como HTML.
  */
