@@ -130,7 +130,7 @@ vez (la app muestra el botón "Volver a conectar Spotify" cuando hace falta).
 - **Layout:** flexbox en toda la app, mobile first (probado desde 320 px hasta escritorio).
 - **Color:** tinta índigo, papel frío y un único acento mandarina. Modo oscuro automático
   (`prefers-color-scheme`); el verde y el frambuesa solo marcan acierto y fallo en el quiz.
-- **Tipografía:** Newsreader (titulares y cifras) e Instrument Sans (texto), autoalojadas en `public/fonts`.
+- **Tipografía:** Unbounded (títulos y cifras) e Instrument Sans (texto), autoalojadas en `public/fonts`.
 - **Iconos:** Phosphor, incrustados como SVG en el HTML.
 - **Móvil:** `100dvh`, áreas seguras (`env(safe-area-inset-*)`), objetivos táctiles de 44 px o más,
   campos a 16 px (iOS no hace zoom) y `:hover` solo con puntero fino.

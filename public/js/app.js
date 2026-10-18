@@ -405,7 +405,7 @@ async function openShareModal() {
     text: shareUrl,
     width: 180,
     height: 180,
-    colorDark: "#1a1612",
+    colorDark: "#0d2b2a",
     colorLight: "#ffffff",
   });
 
