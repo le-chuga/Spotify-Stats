@@ -67,6 +67,11 @@ app.get("/quiz", async (c) => {
   return asset;
 });
 
+app.get("/games", async (c) => {
+  const asset = await c.env.ASSETS.fetch(new Request(new URL("/games.html", c.req.url)));
+  return asset;
+});
+
 // ── Fallback: todo lo demás → index.html ───────────────
 app.get("*", async (c) => {
   try {

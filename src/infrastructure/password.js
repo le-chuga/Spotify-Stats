@@ -29,6 +29,8 @@ async function derive(password, salt, iterations) {
   );
 }
 
+
+
 export async function hashPassword(password) {
   const salt = crypto.getRandomValues(new Uint8Array(16));
   const hash = await derive(password, salt, ITERATIONS);

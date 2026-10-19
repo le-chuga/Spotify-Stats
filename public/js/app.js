@@ -476,6 +476,11 @@ document.getElementById("btn-quizzes-panel").addEventListener("click", () => {
   setTimeout(() => { location.href = "/quiz"; }, 300);
 });
 
+document.getElementById("btn-games-panel").addEventListener("click", () => {
+  closePanel("side-panel", "side-panel-overlay");
+  setTimeout(() => { location.href = "/games"; }, 300);
+});
+
 document.getElementById("btn-share-panel").addEventListener("click", openShareModal);
 
 document.getElementById("btn-common-panel").addEventListener("click", () => {

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content" />
+  <meta name="color-scheme" content="light dark" />
+  <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f2f8f6" />
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#08191a" />
+  <title>Games | Frecuencia</title>
+  <meta name="robots" content="noindex" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="preload" href="/fonts/unbounded-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href="/fonts/instrument-sans-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <link rel="stylesheet" href="/css/games.css" />
+</head>
+<body>
+  <a class="skip-link" id="skip-link" href="#">Saltar al contenido</a>
+  <noscript>Los juegos necesitan JavaScript para funcionar. Actívalo en tu navegador y recarga la página.</noscript>
+  <a class="back-link" id="btn-back" href="/"><svg class="icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M165.66,202.34a8,8,0,0,1-11.32,11.32l-80-80a8,8,0,0,1,0-11.32l80-80a8,8,0,0,1,11.32,11.32L91.31,128Z"/></svg> <span id="back-label">Volver</span></a>
+
+  <!-- ============ Lista de juegos ============ -->
+  <main class="games-screen" id="screen-hub">
+    <div class="games-hub">
+      <div>
+        <p class="quiz-name">Games</p>
+        <h1 class="quiz-title">Elige un juego</h1>
+      </div>
+      <p class="muted">Juegos de música para 1, 2, 3 o 4 personas en el mismo dispositivo: os vais pasando el móvil por turnos. Una vez cargados, funcionan sin conexión.</p>
+
+      <div class="field">
+        <span class="field-label" id="players-label">¿Cuántos jugáis?</span>
+        <div class="seg" id="players-picker" role="radiogroup" aria-labelledby="players-label"></div>
+      </div>
+
+      <ul class="game-list" id="game-list"></ul>
+    </div>
+  </main>
+
+  <!-- ============ Partida ============ -->
+  <main class="games-screen games-screen--play" id="screen-play" hidden>
+    <ol class="scoreboard" id="scoreboard" aria-label="Marcador"></ol>
+    <div class="game-stage" id="game-stage"></div>
+    <p class="sr-only" id="game-live" role="status" aria-live="polite"></p>
+  </main>
+
+  <footer class="site-footer">
+    <nav aria-label="Información legal">
+      <ul>
+        <li><a href="/privacidad">Privacidad</a></li>
+        <li><a href="/cookies">Cookies</a></li>
+        <li><a href="/terminos">Términos y condiciones</a></li>
+      </ul>
+    </nav>
+    <p>Los juegos no envían ningún dato: los sonidos se generan en tu dispositivo y las mejores puntuaciones se guardan solo en tu navegador.</p>
+  </footer>
+
+  <script type="module" src="/js/a11y.js"></script>
+  <script type="module" src="/js/games.js"></script>
+</body>
+</html>
