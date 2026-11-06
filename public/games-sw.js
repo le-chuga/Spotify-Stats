@@ -1,6 +1,6 @@
 /* Service worker de /games: guarda la página y sus archivos para jugar sin conexión.
    Solo controla /games (scope), el resto de la app no pasa por aquí. */
-const CACHE = "frecuencia-games-v1";
+const CACHE = "frecuencia-games-v2";
 const FILES = [
   "/games",
   "/css/styles.css",
@@ -15,6 +15,7 @@ const FILES = [
   "/js/games/simon.js",
   "/js/games/pulse.js",
   "/js/games/ear.js",
+  "/js/games/chord.js",
 ];
 
 self.addEventListener("install", (event) => {

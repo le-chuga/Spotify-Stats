@@ -9,8 +9,9 @@ import { unlock } from "./games/audio.js";
 import simon from "./games/simon.js";
 import pulse from "./games/pulse.js";
 import ear from "./games/ear.js";
+import chord from "./games/chord.js";
 
-const GAMES = [simon, pulse, ear];
+const GAMES = [simon, pulse, ear, chord];
 const MAX_PLAYERS = 4;
 
 const $ = (id) => document.getElementById(id);
