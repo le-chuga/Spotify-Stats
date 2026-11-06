@@ -1,6 +1,6 @@
 /* Service worker de /games: guarda la página y sus archivos para jugar sin conexión.
    Solo controla /games (scope), el resto de la app no pasa por aquí. */
-const CACHE = "frecuencia-games-v3";
+const CACHE = "frecuencia-games-v4";
 const FILES = [
   "/games",
   "/css/styles.css",
