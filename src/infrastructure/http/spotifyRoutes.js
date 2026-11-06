@@ -177,7 +177,7 @@ async function loadPlaylist(spotify, accessToken, id, index) {
       );
     }
     throw new CommonError(
-      `No podemos leer «${info.name}»${info.ownerName ? ` (de ${info.ownerName})` : ""}. Spotify solo permite a esta app leer playlists tuyas o en las que colaboras.`,
+      `No podemos leer «${info.name}»${info.ownerName ? ` (de ${info.ownerName})` : ""}. Spotify solo permite a esta app leer playlists tuyas o en las que colaboras. Pide a su dueño que la haga colaborativa e invítate, o que la ponga pública mientras comparáis.`,
       { index }
     );
   }
