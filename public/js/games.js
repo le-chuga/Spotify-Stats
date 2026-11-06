@@ -10,8 +10,9 @@ import simon from "./games/simon.js";
 import pulse from "./games/pulse.js";
 import ear from "./games/ear.js";
 import chord from "./games/chord.js";
+import guess from "./games/guess.js";
 
-const GAMES = [simon, pulse, ear, chord];
+const GAMES = [simon, pulse, ear, chord, guess];
 const MAX_PLAYERS = 4;
 
 const $ = (id) => document.getElementById(id);
