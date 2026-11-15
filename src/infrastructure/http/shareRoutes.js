@@ -1,8 +1,9 @@
 import { Hono } from "hono";
-import { D1UserRepository } from "../repositories/D1UserRepository.js";
+import { userRepository } from "../repositories/D1UserRepository.js";
 import { D1SnapshotRepository } from "../repositories/D1SnapshotRepository.js";
 import { SpotifyClient } from "../spotify/SpotifyClient.js";
 import { getSession } from "../session.js";
+import { enforce, RULES } from "../security/rateLimit.js";
 
 export const shareRoutes = new Hono();
 
@@ -10,8 +11,10 @@ export const shareRoutes = new Hono();
 shareRoutes.post("/", async (c) => {
   const { data } = await getSession(c);
   if (!data.accountId) return c.json({ success: false, error: "No autenticado" }, 401);
+  const limited = await enforce(c, `share:${data.accountId}`, RULES.shareCreate, "enlaces");
+  if (limited) return limited;
 
-  const repo = new D1UserRepository(c.env.DB);
+  const repo = userRepository(c);
   const user = await repo.findByAccountId(data.accountId);
   if (!user?.spotifyTokens) return c.json({ success: false, error: "No tienes Spotify vinculado" }, 400);
 
@@ -27,7 +30,7 @@ shareRoutes.post("/", async (c) => {
   try {
     const stats = await spotify.fetchListeningStats(accessToken);
     delete stats.profile.email; // el enlace es público: el email no se guarda
-    const id = Array.from(crypto.getRandomValues(new Uint8Array(8)))
+    const id = Array.from(crypto.getRandomValues(new Uint8Array(16)))
       .map(b => b.toString(16).padStart(2, "0")).join("");
     const snapshotRepo = new D1SnapshotRepository(c.env.DB);
     await snapshotRepo.save(id, data.accountId, JSON.stringify(stats), user.avatarBase64 || null);
@@ -41,7 +44,9 @@ shareRoutes.post("/", async (c) => {
 // GET /api/share/:id — devuelve snapshot pública
 shareRoutes.get("/:id", async (c) => {
   const snapshotRepo = new D1SnapshotRepository(c.env.DB);
-  const snapshot = await snapshotRepo.findById(c.req.param("id"));
+  const id = c.req.param("id");
+  if (!/^[a-f0-9]{16,32}$/.test(id)) return c.json({ success: false, error: "Enlace no encontrado o caducado" }, 404);
+  const snapshot = await snapshotRepo.findById(id);
   if (!snapshot) return c.json({ success: false, error: "Enlace no encontrado o caducado" }, 404);
   return c.json({ success: true, snapshot });
 });

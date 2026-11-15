@@ -1,0 +1,6 @@
+# Copia este archivo a .dev.vars para desarrollo local (wrangler dev). .dev.vars NO se sube a Git.
+# En producción estos valores se guardan con: npx wrangler secret put NOMBRE
+SPOTIFY_CLIENT_ID=
+SPOTIFY_CLIENT_SECRET=
+# 32 bytes aleatorios en base64. Genera uno con: node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
+TOKEN_ENCRYPTION_KEY=

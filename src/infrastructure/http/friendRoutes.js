@@ -1,7 +1,8 @@
 import { Hono } from "hono";
 import { SpotifyClient } from "../spotify/SpotifyClient.js";
-import { D1UserRepository } from "../repositories/D1UserRepository.js";
+import { userRepository } from "../repositories/D1UserRepository.js";
 import { getSession } from "../session.js";
+import { enforce, RULES } from "../security/rateLimit.js";
 import { getFreshToken } from "./spotifyRoutes.js";
 
 export const friendRoutes = new Hono();
@@ -76,6 +77,8 @@ friendRoutes.post("/invite/reset", async (c) => {
 friendRoutes.post("/join", async (c) => {
   const me = await authed(c);
   if (!me) return c.json({ success: false, error: "No autenticado" }, 401);
+  const limited = await enforce(c, `friend-join:${me}`, RULES.friendJoin, "intentos");
+  if (limited) return limited;
   const { code } = await c.req.json().catch(() => ({}));
   if (typeof code !== "string" || !/^[a-f0-9]{18}$/.test(code.trim().toLowerCase())) {
     return c.json({ success: false, error: "Ese enlace de invitación no es válido." }, 400);
@@ -111,7 +114,7 @@ friendRoutes.get("/:id/stats", async (c) => {
   if (!(await areFriends(c.env.DB, me, friendId))) {
     return c.json({ success: false, error: "No eres amigo de esa cuenta." }, 403);
   }
-  const repo = new D1UserRepository(c.env.DB);
+  const repo = userRepository(c);
   const friend = await repo.findByAccountId(friendId);
   if (!friend) return c.json({ success: false, error: "Esa cuenta ya no existe." }, 404);
   if (!friend.spotifyTokens) {

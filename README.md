@@ -147,3 +147,14 @@ vez (la app muestra el botón "Volver a conectar Spotify" cuando hace falta).
 3. Ejecuta las migraciones: `npm run db:migrate:remote`. Las tablas de amigos se crean solas si faltan, pero conviene tenerlas en el esquema.
 4. Spotify: una app en modo desarrollo solo admite usuarios que añadas a mano en el panel. Para abrirla al público hay que pedir una extensión de cuota a Spotify.
 5. Revisa los límites de peticiones del plan de Cloudflare y activa una regla de limitación de intentos en `/api/auth/login`.
+
+## Seguridad
+
+Las medidas, la configuración obligatoria (`TOKEN_ENCRYPTION_KEY`) y qué hacer si se filtra un secreto están en [SECURITY.md](SECURITY.md).
+
+```bash
+npm test                 # login, límites, sesión, OAuth, CSRF, cifrado y cabeceras
+npm run check:security   # cabeceras sincronizadas y búsqueda de secretos
+npm run sync:headers     # regenera public/_headers tras editar src/infrastructure/security/headers.js
+npm run setup:hooks      # activa el hook que bloquea commits con secretos
+```

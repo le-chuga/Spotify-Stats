@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Sin permisos de escritura: un workflow comprometido no puede modificar el repositorio
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      # Las acciones van fijadas por commit (no por etiqueta): una etiqueta se puede mover, un commit no
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Pruebas de seguridad
+        run: npm test
+      - name: Cabeceras sincronizadas y sin secretos
+        run: npm run check:security
+      - name: Dependencias con vulnerabilidades conocidas (solo producción)
+        run: npm audit --omit=dev --audit-level=high

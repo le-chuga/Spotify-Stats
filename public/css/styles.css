@@ -1214,3 +1214,8 @@ input { font-size: 1rem; } /* 16px: iOS no hace zoom al enfocar */
 
 .btn--danger { background: var(--bad); color: var(--on-bad); }
 @media (hover: hover) and (pointer: fine) { .btn--danger:hover { filter: brightness(0.92); } }
+
+/* Antes eran atributos style="" en el HTML; fuera de él la CSP puede prohibir estilos en línea */
+.note--spaced { margin-top: 1rem; }
+#share-loading-view { align-items: center; }
+#share-apps-card { max-width: 24rem; }
