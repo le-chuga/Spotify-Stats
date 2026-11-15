@@ -57,7 +57,8 @@ export class SpotifyClient {
       headers: { "Content-Type": "application/x-www-form-urlencoded", Authorization: this.#basicAuth() },
       body: body.toString(),
     });
-    const d = await res.json();
+    const d = await res.json().catch(() => ({}));
+    if (!res.ok || !d.access_token || !d.refresh_token) throw new SpotifyApiError(res.status);
     return { accessToken: d.access_token, refreshToken: d.refresh_token, expiresAt: Date.now() + d.expires_in * 1000 };
   }
 
@@ -68,7 +69,8 @@ export class SpotifyClient {
       headers: { "Content-Type": "application/x-www-form-urlencoded", Authorization: this.#basicAuth() },
       body: body.toString(),
     });
-    const d = await res.json();
+    const d = await res.json().catch(() => ({}));
+    if (!res.ok || !d.access_token) throw new SpotifyApiError(res.status);
     return { accessToken: d.access_token, refreshToken: d.refresh_token || refreshToken, expiresAt: Date.now() + d.expires_in * 1000 };
   }
 

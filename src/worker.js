@@ -11,32 +11,24 @@ import { shareRoutes } from "./infrastructure/http/shareRoutes.js";
 import { quizRoutes } from "./infrastructure/http/quizRoutes.js";
 import { friendRoutes } from "./infrastructure/http/friendRoutes.js";
 import { deezerRoutes } from "./infrastructure/http/deezerRoutes.js";
+import { withSecurityHeaders } from "./infrastructure/security/headers.js";
+import { sameOriginOnly } from "./infrastructure/security/csrf.js";
 
 const app = new Hono();
 
-// Cabeceras de seguridad. Las imágenes y el audio vienen de Spotify, Deezer y Apple (previews del quiz).
-const CSP = [
-  "default-src 'self'",
-  "script-src 'self'",
-  "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: https:",
-  "media-src 'self' https:",
-  "font-src 'self'",
-  "connect-src 'self' https://itunes.apple.com",
-  "object-src 'none'",
-  "base-uri 'self'",
-  "form-action 'self'",
-  "frame-ancestors 'none'",
-].join("; ");
-
+// Cabeceras de seguridad en todas las respuestas (definidas en security/headers.js)
 app.use("*", async (c, next) => {
   await next();
-  const res = new Response(c.res.body, c.res); // las respuestas de ASSETS tienen cabeceras inmutables
-  res.headers.set("Content-Security-Policy", CSP);
-  res.headers.set("X-Content-Type-Options", "nosniff");
-  res.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
-  res.headers.set("Permissions-Policy", "camera=(), microphone=(), geolocation=(), payment=()");
-  c.res = res;
+  c.res = withSecurityHeaders(c.res, new URL(c.req.url).pathname);
+});
+
+// Las peticiones que cambian datos solo se aceptan desde esta misma web
+app.use("/api/*", sameOriginOnly());
+
+// Un fallo inesperado no debe filtrar detalles: se registra y el cliente recibe un mensaje genérico
+app.onError((err, c) => {
+  console.error("[Error]", c.req.method, new URL(c.req.url).pathname, err?.message);
+  return c.json({ success: false, error: "Error interno. Inténtalo de nuevo." }, 500);
 });
 
 // ── Rutas API ──────────────────────────────────────────

@@ -1,7 +1,16 @@
 node_modules/
 .wrangler/
-.dev.vars
-.env
-*.env
 data/
 *.log
+
+# Secretos: nunca se suben. Solo se admiten los archivos de ejemplo (sin valores).
+.env
+.env.*
+*.env
+.dev.vars
+.dev.vars.*
+*.pem
+*.key
+*.p12
+!.env.example
+!.dev.vars.example

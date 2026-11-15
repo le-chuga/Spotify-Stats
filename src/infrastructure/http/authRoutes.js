@@ -1,7 +1,9 @@
 import { Hono } from "hono";
 import { hashPassword, verifyPassword } from "../password.js";
-import { D1UserRepository } from "../repositories/D1UserRepository.js";
-import { getSession, saveSession, destroySession, setSessionCookie, clearSessionCookie } from "../session.js";
+import { userRepository } from "../repositories/D1UserRepository.js";
+import { getSession, startSession, destroySession, setSessionCookie, clearSessionCookie } from "../session.js";
+import { hit, peek, reset, clientIp, enforce, tooManyRequests, RULES } from "../security/rateLimit.js";
+import { COMMON_PASSWORDS } from "../security/commonPasswords.js";
 
 export const authRoutes = new Hono();
 
@@ -16,26 +18,71 @@ authRoutes.post("/register", async (c) => {
   const trimmed = accountId.trim();
   if (trimmed.length < 3) return c.json({ success: false, error: "El Id debe tener al menos 3 caracteres" }, 400);
   if (trimmed.length > 32) return c.json({ success: false, error: "El Id no puede tener más de 32 caracteres" }, 400);
+  // Sin caracteres de control ni invisibles (evita Ids que parecen otro o rompen la interfaz)
+  if (/[\p{C}\p{Zl}\p{Zp}]/u.test(trimmed)) return c.json({ success: false, error: "El Id contiene caracteres no permitidos" }, 400);
   if (password.length < 8) return c.json({ success: false, error: "La contraseña debe tener al menos 8 caracteres" }, 400);
   if (password.length > 200) return c.json({ success: false, error: "La contraseña es demasiado larga" }, 400);
-  const repo = new D1UserRepository(c.env.DB);
+  if (COMMON_PASSWORDS.has(password.toLowerCase()) || password.toLowerCase() === trimmed.toLowerCase()) {
+    return c.json({ success: false, error: "Esa contraseña es demasiado fácil de adivinar. Elige otra." }, 400);
+  }
+  const limited = await enforce(c, `register:${clientIp(c)}`, RULES.registerPerIp, "registros");
+  if (limited) return limited;
+  const repo = userRepository(c);
   const existing = await repo.findByAccountId(trimmed);
   if (existing) return c.json({ success: false, error: "Esa Id de cuenta ya existe. Elige otra." }, 400);
   const passwordHash = await hashPassword(password);
-  await repo.create({ accountId: trimmed, passwordHash });
+  try {
+    await repo.create({ accountId: trimmed, passwordHash });
+  } catch {
+    // dos registros simultáneos con el mismo Id: gana uno (UNIQUE en la base de datos)
+    return c.json({ success: false, error: "Esa Id de cuenta ya existe. Elige otra." }, 400);
+  }
   return c.json({ success: true, message: "Cuenta creada correctamente. Ya puedes iniciar sesión." }, 201);
 });
 
+// Hash de relleno: si el Id no existe se verifica igualmente, para que tardar menos
+// no delate qué Ids están registrados.
+let dummyHash = null;
+
+const LOGIN_FAILED = "El Id de cuenta o la contraseña no son correctos";
+
 authRoutes.post("/login", async (c) => {
   const { accountId, password } = await c.req.json().catch(() => ({}));
-  if (!accountId || !password) return c.json({ success: false, error: "Debes rellenar ambos campos", errorFields: ["accountId", "password"] }, 401);
-  const repo = new D1UserRepository(c.env.DB);
-  const user = await repo.findByAccountId(accountId.trim());
-  if (!user) return c.json({ success: false, error: "El Id de cuenta y la contraseña no coinciden con ningún usuario registrado", errorFields: ["accountId", "password"] }, 401);
-  const ok = await verifyPassword(password, user.passwordHash);
-  if (!ok) return c.json({ success: false, error: "La contraseña es errónea", errorFields: ["password"] }, 401);
+  if (typeof accountId !== "string" || typeof password !== "string" || !accountId || !password) {
+    return c.json({ success: false, error: "Debes rellenar ambos campos", errorFields: ["accountId", "password"] }, 401);
+  }
+  if (accountId.length > 64 || password.length > 200) {
+    return c.json({ success: false, error: LOGIN_FAILED, errorFields: ["accountId", "password"] }, 401);
+  }
+  const id = accountId.trim();
+  const ip = clientIp(c);
+  const keys = {
+    ip: `login:ip:${ip}`,
+    pair: `login:pair:${ip}:${id.toLowerCase()}`,
+    account: `login:acct:${id.toLowerCase()}`,
+  };
+
+  // Tope general por IP y bloqueo si ya hubo demasiados fallos para esta cuenta
+  const total = await hit(c.env.DB, keys.ip, RULES.loginPerIp);
+  if (!total.allowed) return tooManyRequests(c, total.retryAfter);
+  for (const [key, rule] of [[keys.pair, RULES.loginPerIpAndAccount], [keys.account, RULES.loginPerAccount]]) {
+    const state = await peek(c.env.DB, key, rule);
+    if (!state.allowed) return tooManyRequests(c, state.retryAfter);
+  }
+
+  const repo = userRepository(c);
+  const user = await repo.findByAccountId(id);
+  dummyHash ??= await hashPassword("contraseña-de-relleno");
+  const ok = await verifyPassword(password, user ? user.passwordHash : dummyHash);
+  if (!user || !ok) {
+    await hit(c.env.DB, keys.pair, RULES.loginPerIpAndAccount);
+    await hit(c.env.DB, keys.account, RULES.loginPerAccount);
+    return c.json({ success: false, error: LOGIN_FAILED, errorFields: ["accountId", "password"] }, 401);
+  }
+
+  await reset(c.env.DB, keys.pair);
   const { id: oldId } = await getSession(c);
-  const sessionId = await saveSession(c, oldId, { accountId: user.accountId });
+  const sessionId = await startSession(c, oldId, { accountId: user.accountId });
   setSessionCookie(c, sessionId);
   return c.json({ success: true, message: "Inicio de sesión correcto", hasSpotifyLinked: !!user.spotifyTokens });
 });
@@ -50,7 +97,7 @@ authRoutes.post("/logout", async (c) => {
 authRoutes.get("/session", async (c) => {
   const { data } = await getSession(c);
   if (!data.accountId) return c.json({ loggedIn: false });
-  const repo = new D1UserRepository(c.env.DB);
+  const repo = userRepository(c);
   const user = await repo.findByAccountId(data.accountId);
   return c.json({ loggedIn: true, accountId: data.accountId, hasSpotifyLinked: !!(user?.spotifyTokens) });
 });
@@ -61,7 +108,7 @@ authRoutes.get("/export", async (c) => {
   if (!data.accountId) return c.json({ success: false, error: "No autenticado" }, 401);
   const db = c.env.DB;
   const id = data.accountId;
-  const repo = new D1UserRepository(db);
+  const repo = userRepository(c);
   const user = await repo.findByAccountId(id);
   const safeAll = async (sql, ...binds) => {
     try {
@@ -92,11 +139,14 @@ authRoutes.post("/delete", async (c) => {
   const { id: sessionId, data } = await getSession(c);
   if (!data.accountId) return c.json({ success: false, error: "No autenticado" }, 401);
   const { password } = await c.req.json().catch(() => ({}));
-  const repo = new D1UserRepository(c.env.DB);
+  const limited = await enforce(c, `delete:${data.accountId}`, RULES.deletePerAccount);
+  if (limited) return limited;
+  const repo = userRepository(c);
   const user = await repo.findByAccountId(data.accountId);
-  if (!user || typeof password !== "string" || !(await verifyPassword(password, user.passwordHash))) {
+  if (!user || typeof password !== "string" || password.length > 200 || !(await verifyPassword(password, user.passwordHash))) {
     return c.json({ success: false, error: "La contraseña no es correcta." }, 403);
   }
+  await reset(c.env.DB, `delete:${data.accountId}`);
   const db = c.env.DB;
   const id = data.accountId;
   const statements = [

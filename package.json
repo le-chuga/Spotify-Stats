@@ -11,10 +11,16 @@
     "db:migrate:remote": "wrangler d1 execute frecuencia-db --remote --file=schema.sql",
     "kv:create": "wrangler kv namespace create SESSIONS",
     "check:launch": "node scripts/check-launch.mjs",
-    "predeploy": "npm run check:launch"
+    "predeploy": "npm run check:launch && npm run check:headers",
+    "sync:headers": "node scripts/sync-headers.mjs",
+    "check:headers": "node scripts/sync-headers.mjs --check",
+    "check:secrets": "node scripts/check-secrets.mjs",
+    "check:security": "npm run check:headers && npm run check:secrets",
+    "setup:hooks": "git config core.hooksPath .githooks",
+    "test": "node --test \"tests/*.test.mjs\""
   },
   "dependencies": {
-    "hono": "4.13.11"
+    "hono": "4.13.16"
   },
   "devDependencies": {
     "wrangler": "^4.0.0"

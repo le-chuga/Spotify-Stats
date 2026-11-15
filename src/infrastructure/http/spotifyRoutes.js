@@ -1,8 +1,9 @@
 import { Hono } from "hono";
 import { SpotifyClient, SpotifyApiError } from "../spotify/SpotifyClient.js";
 import { extractPlaylistId, findCommonTracks } from "../../domain/commonTracks.js";
-import { D1UserRepository } from "../repositories/D1UserRepository.js";
-import { getSession, saveSession, setSessionCookie } from "../session.js";
+import { userRepository } from "../repositories/D1UserRepository.js";
+import { getSession, saveSession } from "../session.js";
+import { enforce, RULES } from "../security/rateLimit.js";
 
 export const spotifyRoutes = new Hono();
 
@@ -11,7 +12,7 @@ const MAX_ARTISTS = 50;
 async function getAuthedUser(c) {
   const { id: sessionId, data } = await getSession(c);
   if (!data.accountId) return { sessionId, accountId: null, user: null, repo: null, spotify: null };
-  const repo = new D1UserRepository(c.env.DB);
+  const repo = userRepository(c);
   const user = await repo.findByAccountId(data.accountId);
   const spotify = new SpotifyClient(c.env);
   return { sessionId, accountId: data.accountId, user, repo, spotify };
@@ -27,25 +28,52 @@ export async function getFreshToken(user, repo, spotify, accountId) {
   return accessToken;
 }
 
+// El parámetro "state" de OAuth protege contra CSRF: es un valor aleatorio que se guarda en la
+// sesión del usuario y debe volver idéntico en el callback. Antes era el Id de cuenta, así que
+// cualquiera podía vincular SU Spotify a la cuenta de otra persona (o leer su Id en la URL).
+const OAUTH_STATE_MAX_AGE_MS = 10 * 60 * 1000;
+
+const randomState = () =>
+  Array.from(crypto.getRandomValues(new Uint8Array(32))).map((b) => b.toString(16).padStart(2, "0")).join("");
+
+function sameString(a, b) {
+  if (typeof a !== "string" || typeof b !== "string" || a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
+}
+
 // GET /api/spotify/login
 spotifyRoutes.get("/login", async (c) => {
-  const { accountId } = (await getSession(c)).data;
-  if (!accountId) return c.json({ error: "No autenticado" }, 401);
+  const { id, data } = await getSession(c);
+  if (!data.accountId) return c.json({ error: "No autenticado" }, 401);
+  const state = randomState();
+  await saveSession(c, id, { ...data, oauthState: state, oauthStateAt: Date.now() });
   const spotify = new SpotifyClient(c.env);
-  return c.redirect(spotify.buildAuthorizeUrl(accountId));
+  return c.redirect(spotify.buildAuthorizeUrl(state));
 });
+
+const spotifyFail = (c, message) => c.redirect("/?spotify_error=" + encodeURIComponent(message));
 
 // GET /api/spotify/callback
 spotifyRoutes.get("/callback", async (c) => {
   const { code, state, error } = c.req.query();
-  if (error) return c.redirect("/?spotify_error=" + encodeURIComponent(error));
-  const repo = new D1UserRepository(c.env.DB);
+  const { id, data } = await getSession(c);
+  // El state se usa una sola vez: se borra de la sesión antes de hacer nada más
+  const { oauthState, oauthStateAt, ...rest } = data;
+  if (id) await saveSession(c, id, rest);
+  if (!data.accountId || !sameString(state, oauthState) || Date.now() - Number(oauthStateAt || 0) > OAUTH_STATE_MAX_AGE_MS) {
+    return spotifyFail(c, "La conexión caducó o no es válida. Inténtalo de nuevo.");
+  }
+  if (error) return spotifyFail(c, error === "access_denied" ? "Has cancelado la conexión con Spotify" : "Spotify rechazó la conexión");
+  if (typeof code !== "string" || !code) return spotifyFail(c, "Spotify no devolvió el permiso");
+  const repo = userRepository(c);
   const spotify = new SpotifyClient(c.env);
   try {
     const tokens = await spotify.exchangeCodeForTokens(code);
-    await repo.saveSpotifyTokens(state, tokens);
+    await repo.saveSpotifyTokens(data.accountId, tokens); // siempre la cuenta de la sesión, nunca la del enlace
   } catch {
-    return c.redirect("/?spotify_error=No+se+pudo+autenticar+con+Spotify");
+    return spotifyFail(c, "No se pudo autenticar con Spotify");
   }
   return c.redirect("/?spotify_linked=1");
 });
@@ -85,6 +113,8 @@ spotifyRoutes.get("/search/artists", async (c) => {
 spotifyRoutes.post("/playlist", async (c) => {
   const { accountId, user, repo, spotify } = await getAuthedUser(c);
   if (!accountId) return c.json({ success: false, error: "No autenticado" }, 401);
+  const limited = await enforce(c, `playlist:${accountId}`, RULES.playlistWrite, "intentos");
+  if (limited) return limited;
   if (!user?.spotifyTokens) return c.json({ success: false, error: "No tienes Spotify vinculado" }, 400);
   const { artistNames, playlistTitle } = await c.req.json().catch(() => ({}));
   if (!Array.isArray(artistNames) || artistNames.length === 0) return c.json({ success: false, error: "Selecciona al menos un artista" }, 400);
@@ -187,6 +217,7 @@ async function loadPlaylist(spotify, accessToken, id, index) {
 spotifyRoutes.post("/common/preview", async (c) => {
   const { accountId, user, repo, spotify } = await getAuthedUser(c);
   if (!accountId) return c.json({ success: false, error: "No autenticado" }, 401);
+  { const limited = await enforce(c, `common-preview:${accountId}`, RULES.playlistWrite, "intentos"); if (limited) return limited; }
   if (!user?.spotifyTokens) return c.json({ success: false, error: "No tienes Spotify vinculado" }, 400);
 
   const { urls } = await c.req.json().catch(() => ({}));
@@ -222,6 +253,7 @@ spotifyRoutes.post("/common/preview", async (c) => {
 spotifyRoutes.post("/common/create", async (c) => {
   const { accountId, user, repo, spotify } = await getAuthedUser(c);
   if (!accountId) return c.json({ success: false, error: "No autenticado" }, 401);
+  { const limited = await enforce(c, `playlist:${accountId}`, RULES.playlistWrite, "intentos"); if (limited) return limited; }
   if (!user?.spotifyTokens) return c.json({ success: false, error: "No tienes Spotify vinculado" }, 400);
 
   const { uris, title, playlistCount } = await c.req.json().catch(() => ({}));
